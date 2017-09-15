@@ -27,7 +27,6 @@
 package com.bulletphysics.collision.broadphase;
 
 import com.bulletphysics.BulletStats;
-import com.bulletphysics.collision.broadphase.AxisSweep3Internal.Handle;
 import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.VectorUtil;
 import com.bulletphysics.util.ObjectArrayList;

@@ -26,7 +26,6 @@
 package com.bulletphysics.collision.broadphase;
 
 import com.bulletphysics.BulletGlobals;
-import com.bulletphysics.collision.broadphase.Dbvt.Node;
 import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.util.IntArrayList;
