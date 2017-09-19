@@ -23,10 +23,10 @@
 
 package com.bulletphysics.dynamics.vehicle;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.Transform;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * WheelInfo contains information per wheel about friction and suspension.
@@ -35,12 +35,12 @@ import javax.vecmath.Vector3f;
  */
 public class WheelInfo {
 
-	//protected final BulletStack stack = BulletStack.get();
-	
+	// protected final BulletStack stack = BulletStack.get();
+
 	public final RaycastInfo raycastInfo = new RaycastInfo();
 
 	public final Transform worldTransform = new Transform();
-	
+
 	public final Vector3f chassisConnectionPointCS = new Vector3f(); // const
 	public final Vector3f wheelDirectionCS = new Vector3f(); // const
 	public final Vector3f wheelAxleCS = new Vector3f(); // const or modified by steering
@@ -59,9 +59,9 @@ public class WheelInfo {
 	public float engineForce;
 
 	public float brake;
-	
+
 	public boolean bIsFrontWheel;
-	
+
 	public Object clientInfo; // can be used to store pointer to sync transforms...
 
 	public float clippedInvContactDotSuspension;
@@ -69,7 +69,7 @@ public class WheelInfo {
 	// calculated by suspension
 	public float wheelsSuspensionForce;
 	public float skidInfo;
-	
+
 	public WheelInfo(WheelInfoConstructionInfo ci) {
 		suspensionRestLength1 = ci.suspensionRestLength;
 		maxSuspensionTravelCm = ci.maxSuspensionTravelCm;
@@ -90,7 +90,7 @@ public class WheelInfo {
 		rollInfluence = 0.1f;
 		bIsFrontWheel = ci.bIsFrontWheel;
 	}
-	
+
 	public float getSuspensionRestLength() {
 		return suspensionRestLength1;
 	}
@@ -98,22 +98,20 @@ public class WheelInfo {
 	public void updateWheel(RigidBody chassis, RaycastInfo raycastInfo) {
 		if (raycastInfo.isInContact) {
 			float project = raycastInfo.contactNormalWS.dot(raycastInfo.wheelDirectionWS);
-			Vector3f chassis_velocity_at_contactPoint = Stack.alloc(Vector3f.class);
-			Vector3f relpos = Stack.alloc(Vector3f.class);
-			relpos.sub(raycastInfo.contactPointWS, chassis.getCenterOfMassPosition(Stack.alloc(Vector3f.class)));
+			Vector3f chassis_velocity_at_contactPoint = new Vector3f();
+			Vector3f relpos = new Vector3f();
+			relpos.sub(raycastInfo.contactPointWS, chassis.getCenterOfMassPosition(new Vector3f()));
 			chassis.getVelocityInLocalPoint(relpos, chassis_velocity_at_contactPoint);
 			float projVel = raycastInfo.contactNormalWS.dot(chassis_velocity_at_contactPoint);
 			if (project >= -0.1f) {
 				suspensionRelativeVelocity = 0f;
 				clippedInvContactDotSuspension = 1f / 0.1f;
-			}
-			else {
+			} else {
 				float inv = -1f / project;
 				suspensionRelativeVelocity = projVel * inv;
 				clippedInvContactDotSuspension = inv;
 			}
-		}
-		else {
+		} else {
 			// Not in contact : position wheel in a nice (rest length) position
 			raycastInfo.suspensionLength = getSuspensionRestLength();
 			suspensionRelativeVelocity = 0f;
@@ -121,9 +119,9 @@ public class WheelInfo {
 			clippedInvContactDotSuspension = 1f;
 		}
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
-	
+
 	public static class RaycastInfo {
 		// set by raycaster
 		public final Vector3f contactNormalWS = new Vector3f(); // contactnormal
@@ -135,5 +133,5 @@ public class WheelInfo {
 		public boolean isInContact;
 		public Object groundObject; // could be general void* ptr
 	}
-	
+
 }

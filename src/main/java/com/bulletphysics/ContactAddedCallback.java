@@ -29,13 +29,15 @@ import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 
 /**
  * Called when contact has been created between two collision objects. At least
- * one of object must have {@link CollisionFlags#CUSTOM_MATERIAL_CALLBACK} flag set.
+ * one of object must have {@link CollisionFlags#CUSTOM_MATERIAL_CALLBACK} flag
+ * set.
  * 
  * @see BulletGlobals#setContactAddedCallback
  * @author jezek2
  */
-public abstract class ContactAddedCallback {
+public interface ContactAddedCallback {
 
-	public abstract boolean contactAdded(ManifoldPoint cp, CollisionObject colObj0, int partId0, int index0, CollisionObject colObj1, int partId1, int index1);
-	
+	public boolean contactAdded(ManifoldPoint cp, CollisionObject colObj0, int partId0, int index0,
+			CollisionObject colObj1, int partId1, int index1);
+
 }

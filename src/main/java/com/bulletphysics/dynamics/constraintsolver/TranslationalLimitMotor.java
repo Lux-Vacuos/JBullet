@@ -30,27 +30,26 @@ http://gimpact.sf.net
 
 package com.bulletphysics.dynamics.constraintsolver;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import cz.advel.stack.StaticAlloc;
-import javax.vecmath.Vector3f;
 
 /**
  *
  * @author jezek2
  */
 public class TranslationalLimitMotor {
-	
-	//protected final BulletStack stack = BulletStack.get();
-	
-	public final Vector3f lowerLimit = new Vector3f(); //!< the constraint lower limits
-	public final Vector3f upperLimit = new Vector3f(); //!< the constraint upper limits
+
+	// protected final BulletStack stack = BulletStack.get();
+
+	public final Vector3f lowerLimit = new Vector3f(); // !< the constraint lower limits
+	public final Vector3f upperLimit = new Vector3f(); // !< the constraint upper limits
 	public final Vector3f accumulatedImpulse = new Vector3f();
-	
-	public float limitSoftness; //!< Softness for linear limit
-	public float damping; //!< Damping for linear limit
-	public float restitution; //! Bounce parameter for linear limit
+
+	public float limitSoftness; // !< Softness for linear limit
+	public float damping; // !< Damping for linear limit
+	public float restitution; // ! Bounce parameter for linear limit
 
 	public TranslationalLimitMotor() {
 		lowerLimit.set(0f, 0f, 0f);
@@ -73,7 +72,8 @@ public class TranslationalLimitMotor {
 	}
 
 	/**
-	 * Test limit.<p>
+	 * Test limit.
+	 * <p>
 	 * - free means upper &lt; lower,<br>
 	 * - locked means upper == lower<br>
 	 * - limited means upper &gt; lower<br>
@@ -83,23 +83,23 @@ public class TranslationalLimitMotor {
 		return (VectorUtil.getCoord(upperLimit, limitIndex) >= VectorUtil.getCoord(lowerLimit, limitIndex));
 	}
 
-	@StaticAlloc
-	public float solveLinearAxis(float timeStep, float jacDiagABInv, RigidBody body1, Vector3f pointInA, RigidBody body2, Vector3f pointInB, int limit_index, Vector3f axis_normal_on_a, Vector3f anchorPos) {
-		Vector3f tmp = Stack.alloc(Vector3f.class);
-		Vector3f tmpVec = Stack.alloc(Vector3f.class);
-		
+	public float solveLinearAxis(float timeStep, float jacDiagABInv, RigidBody body1, Vector3f pointInA,
+			RigidBody body2, Vector3f pointInB, int limit_index, Vector3f axis_normal_on_a, Vector3f anchorPos) {
+		Vector3f tmp = new Vector3f();
+		Vector3f tmpVec = new Vector3f();
+
 		// find relative velocity
-		Vector3f rel_pos1 = Stack.alloc(Vector3f.class);
-		//rel_pos1.sub(pointInA, body1.getCenterOfMassPosition(tmpVec));
+		Vector3f rel_pos1 = new Vector3f();
+		// rel_pos1.sub(pointInA, body1.getCenterOfMassPosition(tmpVec));
 		rel_pos1.sub(anchorPos, body1.getCenterOfMassPosition(tmpVec));
 
-		Vector3f rel_pos2 = Stack.alloc(Vector3f.class);
-		//rel_pos2.sub(pointInB, body2.getCenterOfMassPosition(tmpVec));
+		Vector3f rel_pos2 = new Vector3f();
+		// rel_pos2.sub(pointInB, body2.getCenterOfMassPosition(tmpVec));
 		rel_pos2.sub(anchorPos, body2.getCenterOfMassPosition(tmpVec));
 
-		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, Stack.alloc(Vector3f.class));
-		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, Stack.alloc(Vector3f.class));
-		Vector3f vel = Stack.alloc(Vector3f.class);
+		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, new Vector3f());
+		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, new Vector3f());
+		Vector3f vel = new Vector3f();
 		vel.sub(vel1, vel2);
 
 		float rel_vel = axis_normal_on_a.dot(vel);
@@ -122,13 +122,11 @@ public class TranslationalLimitMotor {
 					depth -= maxLimit;
 					lo = 0f;
 
-				}
-				else {
+				} else {
 					if (depth < minLimit) {
 						depth -= minLimit;
 						hi = 0f;
-					}
-					else {
+					} else {
 						return 0.0f;
 					}
 				}
@@ -142,7 +140,7 @@ public class TranslationalLimitMotor {
 		VectorUtil.setCoord(accumulatedImpulse, limit_index, sum > hi ? 0f : sum < lo ? 0f : sum);
 		normalImpulse = VectorUtil.getCoord(accumulatedImpulse, limit_index) - oldNormalImpulse;
 
-		Vector3f impulse_vector = Stack.alloc(Vector3f.class);
+		Vector3f impulse_vector = new Vector3f();
 		impulse_vector.scale(normalImpulse, axis_normal_on_a);
 		body1.applyImpulse(impulse_vector, rel_pos1);
 
@@ -150,5 +148,5 @@ public class TranslationalLimitMotor {
 		body2.applyImpulse(tmp, rel_pos2);
 		return normalImpulse;
 	}
-	
+
 }

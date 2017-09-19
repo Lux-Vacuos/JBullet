@@ -23,32 +23,33 @@
 
 package com.bulletphysics.collision.shapes;
 
-import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
 import javax.vecmath.Vector3f;
+
+import com.bulletphysics.linearmath.VectorUtil;
 
 /**
  * StridingMeshInterface is the abstract class for high performance access to
- * triangle meshes. It allows for sharing graphics and collision meshes. Also
- * it provides locking/unlocking of graphics meshes that are in GPU memory.
+ * triangle meshes. It allows for sharing graphics and collision meshes. Also it
+ * provides locking/unlocking of graphics meshes that are in GPU memory.
  * 
  * @author jezek2
  */
 public abstract class StridingMeshInterface {
 
 	protected final Vector3f scaling = new Vector3f(1f, 1f, 1f);
-	
-	public void internalProcessAllTriangles(InternalTriangleIndexCallback callback, Vector3f aabbMin, Vector3f aabbMax) {
+
+	public void internalProcessAllTriangles(InternalTriangleIndexCallback callback, Vector3f aabbMin,
+			Vector3f aabbMax) {
 		int graphicssubparts = getNumSubParts();
-		Vector3f[] triangle/*[3]*/ = new Vector3f[]{ Stack.alloc(Vector3f.class), Stack.alloc(Vector3f.class), Stack.alloc(Vector3f.class) };
+		Vector3f[] triangle/* [3] */ = new Vector3f[] { new Vector3f(), new Vector3f(), new Vector3f() };
 
-		Vector3f meshScaling = getScaling(Stack.alloc(Vector3f.class));
+		Vector3f meshScaling = getScaling(new Vector3f());
 
-		for (int part=0; part<graphicssubparts; part++) {
+		for (int part = 0; part < graphicssubparts; part++) {
 			VertexData data = getLockedReadOnlyVertexIndexBase(part);
 
-			for (int i=0, cnt=data.getIndexCount()/3; i<cnt; i++) {
-				data.getTriangle(i*3, meshScaling, triangle);
+			for (int i = 0, cnt = data.getIndexCount() / 3; i < cnt; i++) {
+				data.getTriangle(i * 3, meshScaling, triangle);
 				callback.internalProcessTriangleIndex(triangle, part, i);
 			}
 
@@ -69,7 +70,7 @@ public abstract class StridingMeshInterface {
 			VectorUtil.setMax(aabbMax, triangle[2]);
 		}
 	}
-	
+
 	public void calculateAabbBruteForce(Vector3f aabbMin, Vector3f aabbMax) {
 		// first calculate the total aabb for all triangles
 		AabbCalculationCallback aabbCallback = new AabbCalculationCallback();
@@ -80,42 +81,43 @@ public abstract class StridingMeshInterface {
 		aabbMin.set(aabbCallback.aabbMin);
 		aabbMax.set(aabbCallback.aabbMax);
 	}
-	
+
 	/**
-	 * Get read and write access to a subpart of a triangle mesh.
-	 * This subpart has a continuous array of vertices and indices.
-	 * In this way the mesh can be handled as chunks of memory with striding
-	 * very similar to OpenGL vertexarray support.
+	 * Get read and write access to a subpart of a triangle mesh. This subpart has a
+	 * continuous array of vertices and indices. In this way the mesh can be handled
+	 * as chunks of memory with striding very similar to OpenGL vertexarray support.
 	 * Make a call to unLockVertexBase when the read and write access is finished.
 	 */
-	public abstract VertexData getLockedVertexIndexBase(int subpart/*=0*/);
+	public abstract VertexData getLockedVertexIndexBase(int subpart/* =0 */);
 
-	public abstract VertexData getLockedReadOnlyVertexIndexBase(int subpart/*=0*/);
+	public abstract VertexData getLockedReadOnlyVertexIndexBase(int subpart/* =0 */);
 
 	/**
-	 * unLockVertexBase finishes the access to a subpart of the triangle mesh.
-	 * Make a call to unLockVertexBase when the read and write access (using getLockedVertexIndexBase) is finished.
+	 * unLockVertexBase finishes the access to a subpart of the triangle mesh. Make
+	 * a call to unLockVertexBase when the read and write access (using
+	 * getLockedVertexIndexBase) is finished.
 	 */
 	public abstract void unLockVertexBase(int subpart);
 
 	public abstract void unLockReadOnlyVertexBase(int subpart);
 
 	/**
-	 * getNumSubParts returns the number of seperate subparts.
-	 * Each subpart has a continuous array of vertices and indices.
+	 * getNumSubParts returns the number of seperate subparts. Each subpart has a
+	 * continuous array of vertices and indices.
 	 */
 	public abstract int getNumSubParts();
 
 	public abstract void preallocateVertices(int numverts);
+
 	public abstract void preallocateIndices(int numindices);
 
 	public Vector3f getScaling(Vector3f out) {
 		out.set(scaling);
 		return out;
 	}
-	
+
 	public void setScaling(Vector3f scaling) {
 		this.scaling.set(scaling);
 	}
-	
+
 }

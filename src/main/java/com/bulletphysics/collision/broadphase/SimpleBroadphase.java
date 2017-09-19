@@ -33,7 +33,7 @@ import javax.vecmath.Vector3f;
  * 
  * @author jezek2
  */
-public class SimpleBroadphase extends BroadphaseInterface {
+public class SimpleBroadphase implements BroadphaseInterface {
 
 	private final ObjectArrayList<SimpleBroadphaseProxy> handles = new ObjectArrayList<SimpleBroadphaseProxy>();
 	private int maxHandles;						// max number of handles

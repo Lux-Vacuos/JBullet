@@ -23,15 +23,16 @@
 
 package com.bulletphysics.collision.shapes;
 
-import com.bulletphysics.collision.broadphase.BroadphaseNativeType;
-import com.bulletphysics.linearmath.Transform;
-import cz.advel.stack.Stack;
 import javax.vecmath.Vector3f;
 
+import com.bulletphysics.collision.broadphase.BroadphaseNativeType;
+import com.bulletphysics.linearmath.Transform;
+
 /**
- * UniformScalingShape allows to re-use uniform scaled instances of {@link ConvexShape}
- * in a memory efficient way. Istead of using {@link UniformScalingShape}, it is better
- * to use the non-uniform setLocalScaling method on convex shapes that implement it.
+ * UniformScalingShape allows to re-use uniform scaled instances of
+ * {@link ConvexShape} in a memory efficient way. Istead of using
+ * {@link UniformScalingShape}, it is better to use the non-uniform
+ * setLocalScaling method on convex shapes that implement it.
  * 
  * @author jezek2
  */
@@ -52,7 +53,7 @@ public class UniformScalingShape extends ConvexShape {
 	public ConvexShape getChildShape() {
 		return childConvexShape;
 	}
-	
+
 	@Override
 	public Vector3f localGetSupportingVertex(Vector3f vec, Vector3f out) {
 		childConvexShape.localGetSupportingVertex(vec, out);
@@ -68,9 +69,10 @@ public class UniformScalingShape extends ConvexShape {
 	}
 
 	@Override
-	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut, int numVectors) {
+	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut,
+			int numVectors) {
 		childConvexShape.batchedUnitVectorGetSupportingVertexWithoutMargin(vectors, supportVerticesOut, numVectors);
-		for (int i=0; i<numVectors; i++) {
+		for (int i = 0; i < numVectors; i++) {
 			supportVerticesOut[i].scale(uniformScalingFactor);
 		}
 	}
@@ -78,11 +80,11 @@ public class UniformScalingShape extends ConvexShape {
 	@Override
 	public void getAabbSlow(Transform t, Vector3f aabbMin, Vector3f aabbMax) {
 		childConvexShape.getAabbSlow(t, aabbMin, aabbMax);
-		Vector3f aabbCenter = Stack.alloc(Vector3f.class);
+		Vector3f aabbCenter = new Vector3f();
 		aabbCenter.add(aabbMax, aabbMin);
 		aabbCenter.scale(0.5f);
 
-		Vector3f scaledAabbHalfExtends = Stack.alloc(Vector3f.class);
+		Vector3f scaledAabbHalfExtends = new Vector3f();
 		scaledAabbHalfExtends.sub(aabbMax, aabbMin);
 		scaledAabbHalfExtends.scale(0.5f * uniformScalingFactor);
 
@@ -124,11 +126,11 @@ public class UniformScalingShape extends ConvexShape {
 	@Override
 	public void getAabb(Transform t, Vector3f aabbMin, Vector3f aabbMax) {
 		childConvexShape.getAabb(t, aabbMin, aabbMax);
-		Vector3f aabbCenter = Stack.alloc(Vector3f.class);
+		Vector3f aabbCenter = new Vector3f();
 		aabbCenter.add(aabbMax, aabbMin);
 		aabbCenter.scale(0.5f);
 
-		Vector3f scaledAabbHalfExtends = Stack.alloc(Vector3f.class);
+		Vector3f scaledAabbHalfExtends = new Vector3f();
 		scaledAabbHalfExtends.sub(aabbMax, aabbMin);
 		scaledAabbHalfExtends.scale(0.5f * uniformScalingFactor);
 
@@ -143,7 +145,8 @@ public class UniformScalingShape extends ConvexShape {
 
 	@Override
 	public void calculateLocalInertia(float mass, Vector3f inertia) {
-		// this linear upscaling is not realistic, but we don't deal with large mass ratios...
+		// this linear upscaling is not realistic, but we don't deal with large mass
+		// ratios...
 		childConvexShape.calculateLocalInertia(mass, inertia);
 		inertia.scale(uniformScalingFactor);
 	}

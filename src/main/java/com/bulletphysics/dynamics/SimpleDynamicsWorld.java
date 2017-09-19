@@ -23,6 +23,8 @@
 
 package com.bulletphysics.dynamics;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.Dispatcher;
 import com.bulletphysics.collision.broadphase.DispatcherInfo;
@@ -34,8 +36,6 @@ import com.bulletphysics.dynamics.constraintsolver.ConstraintSolver;
 import com.bulletphysics.dynamics.constraintsolver.ContactSolverInfo;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.util.ObjectArrayList;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * SimpleDynamicsWorld serves as unit-test and to verify more complicated and
@@ -49,16 +49,17 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	protected ConstraintSolver constraintSolver;
 	protected boolean ownsConstraintSolver;
 	protected final Vector3f gravity = new Vector3f(0f, 0f, -10f);
-	
-	public SimpleDynamicsWorld(Dispatcher dispatcher, BroadphaseInterface pairCache, ConstraintSolver constraintSolver, CollisionConfiguration collisionConfiguration) {
+
+	public SimpleDynamicsWorld(Dispatcher dispatcher, BroadphaseInterface pairCache, ConstraintSolver constraintSolver,
+			CollisionConfiguration collisionConfiguration) {
 		super(dispatcher, pairCache, collisionConfiguration);
 		this.constraintSolver = constraintSolver;
 		this.ownsConstraintSolver = false;
 	}
 
 	protected void predictUnconstraintMotion(float timeStep) {
-		Transform tmpTrans = Stack.alloc(Transform.class);
-		
+		Transform tmpTrans = new Transform();
+
 		for (int i = 0; i < collisionObjects.size(); i++) {
 			CollisionObject colObj = collisionObjects.getQuick(i);
 			RigidBody body = RigidBody.upcast(colObj);
@@ -74,9 +75,9 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 			}
 		}
 	}
-	
+
 	protected void integrateTransforms(float timeStep) {
-		Transform predictedTrans = Stack.alloc(Transform.class);
+		Transform predictedTrans = new Transform();
 		for (int i = 0; i < collisionObjects.size(); i++) {
 			CollisionObject colObj = collisionObjects.getQuick(i);
 			RigidBody body = RigidBody.upcast(colObj);
@@ -88,9 +89,10 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 			}
 		}
 	}
-	
+
 	/**
-	 * maxSubSteps/fixedTimeStep for interpolation is currently ignored for SimpleDynamicsWorld, use DiscreteDynamicsWorld instead.
+	 * maxSubSteps/fixedTimeStep for interpolation is currently ignored for
+	 * SimpleDynamicsWorld, use DiscreteDynamicsWorld instead.
 	 */
 	@Override
 	public int stepSimulation(float timeStep, int maxSubSteps, float fixedTimeStep) {
@@ -107,15 +109,16 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 
 		// solve contact constraints
 		int numManifolds = dispatcher1.getNumManifolds();
-		if (numManifolds != 0)
-		{
-			ObjectArrayList<PersistentManifold> manifoldPtr = ((CollisionDispatcher)dispatcher1).getInternalManifoldPointer();
+		if (numManifolds != 0) {
+			ObjectArrayList<PersistentManifold> manifoldPtr = ((CollisionDispatcher) dispatcher1)
+					.getInternalManifoldPointer();
 
 			ContactSolverInfo infoGlobal = new ContactSolverInfo();
 			infoGlobal.timeStep = timeStep;
-			constraintSolver.prepareSolve(0,numManifolds);
-			constraintSolver.solveGroup(null,0,manifoldPtr, 0, numManifolds, null,0,0,infoGlobal,debugDrawer/*, m_stackAlloc*/,dispatcher1);
-			constraintSolver.allSolved(infoGlobal,debugDrawer/*, m_stackAlloc*/);
+			constraintSolver.prepareSolve(0, numManifolds);
+			constraintSolver.solveGroup(null, 0, manifoldPtr, 0, numManifolds, null, 0, 0, infoGlobal,
+					debugDrawer/* , m_stackAlloc */, dispatcher1);
+			constraintSolver.allSolved(infoGlobal, debugDrawer/* , m_stackAlloc */);
 		}
 
 		// integrate transforms
@@ -177,9 +180,9 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 
 	@Override
 	public void updateAabbs() {
-		Transform tmpTrans = Stack.alloc(Transform.class);
-		Transform predictedTrans = Stack.alloc(Transform.class);
-		Vector3f minAabb = Stack.alloc(Vector3f.class), maxAabb = Stack.alloc(Vector3f.class);
+		Transform tmpTrans = new Transform();
+		Transform predictedTrans = new Transform();
+		Vector3f minAabb = new Vector3f(), maxAabb = new Vector3f();
 
 		for (int i = 0; i < collisionObjects.size(); i++) {
 			CollisionObject colObj = collisionObjects.getQuick(i);
@@ -195,8 +198,8 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	}
 
 	public void synchronizeMotionStates() {
-		Transform tmpTrans = Stack.alloc(Transform.class);
-		
+		Transform tmpTrans = new Transform();
+
 		// todo: iterate over awake simulation islands!
 		for (int i = 0; i < collisionObjects.size(); i++) {
 			CollisionObject colObj = collisionObjects.getQuick(i);
@@ -212,7 +215,7 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	@Override
 	public void setConstraintSolver(ConstraintSolver solver) {
 		if (ownsConstraintSolver) {
-			//btAlignedFree(m_constraintSolver);
+			// btAlignedFree(m_constraintSolver);
 		}
 
 		ownsConstraintSolver = false;
@@ -223,7 +226,7 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	public ConstraintSolver getConstraintSolver() {
 		return constraintSolver;
 	}
-	
+
 	@Override
 	public void debugDrawWorld() {
 		// TODO: throw new UnsupportedOperationException("Not supported yet.");

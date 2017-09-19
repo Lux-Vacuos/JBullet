@@ -30,11 +30,10 @@ http://gimpact.sf.net
 
 package com.bulletphysics.dynamics.constraintsolver;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.BulletGlobals;
 import com.bulletphysics.dynamics.RigidBody;
-import cz.advel.stack.Stack;
-import cz.advel.stack.StaticAlloc;
-import javax.vecmath.Vector3f;
 
 /**
  * Rotation limit structure for generic joints.
@@ -42,40 +41,40 @@ import javax.vecmath.Vector3f;
  * @author jezek2
  */
 public class RotationalLimitMotor {
-	
-	//protected final BulletStack stack = BulletStack.get();
 
-	public float loLimit; //!< joint limit
-	public float hiLimit; //!< joint limit
-	public float targetVelocity; //!< target motor velocity
-	public float maxMotorForce; //!< max force on motor
-	public float maxLimitForce; //!< max force on limit
-	public float damping; //!< Damping.
-	public float limitSoftness; //! Relaxation factor
-	public float ERP; //!< Error tolerance factor when joint is at limit
-	public float bounce; //!< restitution factor
+	// protected final BulletStack stack = BulletStack.get();
+
+	public float loLimit; // !< joint limit
+	public float hiLimit; // !< joint limit
+	public float targetVelocity; // !< target motor velocity
+	public float maxMotorForce; // !< max force on motor
+	public float maxLimitForce; // !< max force on limit
+	public float damping; // !< Damping.
+	public float limitSoftness; // ! Relaxation factor
+	public float ERP; // !< Error tolerance factor when joint is at limit
+	public float bounce; // !< restitution factor
 	public boolean enableMotor;
-	
-	public float currentLimitError;//!  How much is violated this limit
-	public int currentLimit;//!< 0=free, 1=at lo limit, 2=at hi limit
+
+	public float currentLimitError;// ! How much is violated this limit
+	public int currentLimit;// !< 0=free, 1=at lo limit, 2=at hi limit
 	public float accumulatedImpulse;
 
 	public RotationalLimitMotor() {
-    	accumulatedImpulse = 0.f;
-        targetVelocity = 0;
-        maxMotorForce = 0.1f;
-        maxLimitForce = 300.0f;
-        loLimit = -BulletGlobals.SIMD_INFINITY;
-        hiLimit = BulletGlobals.SIMD_INFINITY;
-        ERP = 0.5f;
-        bounce = 0.0f;
-        damping = 1.0f;
-        limitSoftness = 0.5f;
-        currentLimit = 0;
-        currentLimitError = 0;
-        enableMotor = false;
+		accumulatedImpulse = 0.f;
+		targetVelocity = 0;
+		maxMotorForce = 0.1f;
+		maxLimitForce = 300.0f;
+		loLimit = -BulletGlobals.SIMD_INFINITY;
+		hiLimit = BulletGlobals.SIMD_INFINITY;
+		ERP = 0.5f;
+		bounce = 0.0f;
+		damping = 1.0f;
+		limitSoftness = 0.5f;
+		currentLimit = 0;
+		currentLimitError = 0;
+		enableMotor = false;
 	}
-	
+
 	public RotationalLimitMotor(RotationalLimitMotor limot) {
 		targetVelocity = limot.targetVelocity;
 		maxMotorForce = limot.maxMotorForce;
@@ -92,20 +91,20 @@ public class RotationalLimitMotor {
 	/**
 	 * Is limited?
 	 */
-    public boolean isLimited()
-    {
-    	if(loLimit>=hiLimit) return false;
-    	return true;
-    }
+	public boolean isLimited() {
+		if (loLimit >= hiLimit)
+			return false;
+		return true;
+	}
 
 	/**
 	 * Need apply correction?
 	 */
-    public boolean needApplyTorques()
-    {
-    	if(currentLimit == 0 && enableMotor == false) return false;
-    	return true;
-    }
+	public boolean needApplyTorques() {
+		if (currentLimit == 0 && enableMotor == false)
+			return false;
+		return true;
+	}
 
 	/**
 	 * Calculates error. Calculates currentLimit and currentLimitError.
@@ -120,8 +119,7 @@ public class RotationalLimitMotor {
 			currentLimit = 1; // low limit violation
 			currentLimitError = test_value - loLimit;
 			return 1;
-		}
-		else if (test_value > hiLimit) {
+		} else if (test_value > hiLimit) {
 			currentLimit = 2; // High limit violation
 			currentLimitError = test_value - hiLimit;
 			return 2;
@@ -134,8 +132,8 @@ public class RotationalLimitMotor {
 	/**
 	 * Apply the correction impulses for two bodies.
 	 */
-	@StaticAlloc
-	public float solveAngularLimits(float timeStep, Vector3f axis, float jacDiagABInv, RigidBody body0, RigidBody body1) {
+	public float solveAngularLimits(float timeStep, Vector3f axis, float jacDiagABInv, RigidBody body0,
+			RigidBody body1) {
 		if (needApplyTorques() == false) {
 			return 0.0f;
 		}
@@ -152,9 +150,9 @@ public class RotationalLimitMotor {
 		maxMotorForce *= timeStep;
 
 		// current velocity difference
-		Vector3f vel_diff = body0.getAngularVelocity(Stack.alloc(Vector3f.class));
+		Vector3f vel_diff = body0.getAngularVelocity(new Vector3f());
 		if (body1 != null) {
-			vel_diff.sub(body1.getAngularVelocity(Stack.alloc(Vector3f.class)));
+			vel_diff.sub(body1.getAngularVelocity(new Vector3f()));
 		}
 
 		float rel_vel = axis.dot(vel_diff);
@@ -175,8 +173,7 @@ public class RotationalLimitMotor {
 		// todo: should clip against accumulated impulse
 		if (unclippedMotorImpulse > 0.0f) {
 			clippedMotorImpulse = unclippedMotorImpulse > maxMotorForce ? maxMotorForce : unclippedMotorImpulse;
-		}
-		else {
+		} else {
 			clippedMotorImpulse = unclippedMotorImpulse < -maxMotorForce ? -maxMotorForce : unclippedMotorImpulse;
 		}
 
@@ -190,7 +187,7 @@ public class RotationalLimitMotor {
 
 		clippedMotorImpulse = accumulatedImpulse - oldaccumImpulse;
 
-		Vector3f motorImp = Stack.alloc(Vector3f.class);
+		Vector3f motorImp = new Vector3f();
 		motorImp.scale(clippedMotorImpulse, axis);
 
 		body0.applyTorqueImpulse(motorImp);
@@ -201,5 +198,5 @@ public class RotationalLimitMotor {
 
 		return clippedMotorImpulse;
 	}
-	
+
 }

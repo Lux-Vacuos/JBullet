@@ -23,14 +23,14 @@
 
 package com.bulletphysics.dynamics.constraintsolver;
 
+import javax.vecmath.Matrix3f;
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.BulletGlobals;
-import com.bulletphysics.util.ObjectPool;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.Transform;
-import cz.advel.stack.Stack;
-import javax.vecmath.Matrix3f;
-import javax.vecmath.Vector3f;
+import com.bulletphysics.util.ObjectPool;
 
 /**
  * Functions for resolving contacts.
@@ -38,30 +38,32 @@ import javax.vecmath.Vector3f;
  * @author jezek2
  */
 public class ContactConstraint {
-	
+
 	public static final ContactSolverFunc resolveSingleCollision = new ContactSolverFunc() {
-		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint, ContactSolverInfo info) {
+		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
+				ContactSolverInfo info) {
 			return resolveSingleCollision(body1, body2, contactPoint, info);
 		}
 	};
 
 	public static final ContactSolverFunc resolveSingleFriction = new ContactSolverFunc() {
-		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint, ContactSolverInfo info) {
+		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
+				ContactSolverInfo info) {
 			return resolveSingleFriction(body1, body2, contactPoint, info);
 		}
 	};
 
 	public static final ContactSolverFunc resolveSingleCollisionCombined = new ContactSolverFunc() {
-		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint, ContactSolverInfo info) {
+		public float resolveContact(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
+				ContactSolverInfo info) {
 			return resolveSingleCollisionCombined(body1, body2, contactPoint, info);
 		}
 	};
-	
+
 	/**
 	 * Bilateral constraint between two dynamic objects.
 	 */
-	public static void resolveSingleBilateral(RigidBody body1, Vector3f pos1,
-			RigidBody body2, Vector3f pos2,
+	public static void resolveSingleBilateral(RigidBody body1, Vector3f pos1, RigidBody body2, Vector3f pos2,
 			float distance, Vector3f normal, float[] impulse, float timeStep) {
 		float normalLenSqr = normal.lengthSquared();
 		assert (Math.abs(normalLenSqr) < 1.1f);
@@ -71,97 +73,88 @@ public class ContactConstraint {
 		}
 
 		ObjectPool<JacobianEntry> jacobiansPool = ObjectPool.get(JacobianEntry.class);
-		Vector3f tmp = Stack.alloc(Vector3f.class);
-		
-		Vector3f rel_pos1 = Stack.alloc(Vector3f.class);
+		Vector3f tmp = new Vector3f();
+
+		Vector3f rel_pos1 = new Vector3f();
 		rel_pos1.sub(pos1, body1.getCenterOfMassPosition(tmp));
 
-		Vector3f rel_pos2 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos2 = new Vector3f();
 		rel_pos2.sub(pos2, body2.getCenterOfMassPosition(tmp));
 
-		//this jacobian entry could be re-used for all iterations
+		// this jacobian entry could be re-used for all iterations
 
-		Vector3f vel1 = Stack.alloc(Vector3f.class);
+		Vector3f vel1 = new Vector3f();
 		body1.getVelocityInLocalPoint(rel_pos1, vel1);
 
-		Vector3f vel2 = Stack.alloc(Vector3f.class);
+		Vector3f vel2 = new Vector3f();
 		body2.getVelocityInLocalPoint(rel_pos2, vel2);
 
-		Vector3f vel = Stack.alloc(Vector3f.class);
+		Vector3f vel = new Vector3f();
 		vel.sub(vel1, vel2);
 
-		Matrix3f mat1 = body1.getCenterOfMassTransform(Stack.alloc(Transform.class)).basis;
+		Matrix3f mat1 = body1.getCenterOfMassTransform(new Transform()).basis;
 		mat1.transpose();
 
-		Matrix3f mat2 = body2.getCenterOfMassTransform(Stack.alloc(Transform.class)).basis;
+		Matrix3f mat2 = body2.getCenterOfMassTransform(new Transform()).basis;
 		mat2.transpose();
 
 		JacobianEntry jac = jacobiansPool.get();
-		jac.init(mat1, mat2,
-				rel_pos1, rel_pos2, normal,
-				body1.getInvInertiaDiagLocal(Stack.alloc(Vector3f.class)), body1.getInvMass(),
-				body2.getInvInertiaDiagLocal(Stack.alloc(Vector3f.class)), body2.getInvMass());
+		jac.init(mat1, mat2, rel_pos1, rel_pos2, normal, body1.getInvInertiaDiagLocal(new Vector3f()),
+				body1.getInvMass(), body2.getInvInertiaDiagLocal(new Vector3f()), body2.getInvMass());
 
 		float jacDiagAB = jac.getDiagonal();
 		float jacDiagABInv = 1f / jacDiagAB;
 
-		Vector3f tmp1 = body1.getAngularVelocity(Stack.alloc(Vector3f.class));
+		Vector3f tmp1 = body1.getAngularVelocity(new Vector3f());
 		mat1.transform(tmp1);
 
-		Vector3f tmp2 = body2.getAngularVelocity(Stack.alloc(Vector3f.class));
+		Vector3f tmp2 = body2.getAngularVelocity(new Vector3f());
 		mat2.transform(tmp2);
 
-		float rel_vel = jac.getRelativeVelocity(
-				body1.getLinearVelocity(Stack.alloc(Vector3f.class)),
-				tmp1,
-				body2.getLinearVelocity(Stack.alloc(Vector3f.class)),
-				tmp2);
+		float rel_vel = jac.getRelativeVelocity(body1.getLinearVelocity(new Vector3f()), tmp1,
+				body2.getLinearVelocity(new Vector3f()), tmp2);
 
 		jacobiansPool.release(jac);
 
 		float a;
 		a = jacDiagABInv;
 
-
 		rel_vel = normal.dot(vel);
 
 		// todo: move this into proper structure
 		float contactDamping = 0.2f;
 
-		//#ifdef ONLY_USE_LINEAR_MASS
-		//	btScalar massTerm = btScalar(1.) / (body1.getInvMass() + body2.getInvMass());
-		//	impulse = - contactDamping * rel_vel * massTerm;
-		//#else	
+		// #ifdef ONLY_USE_LINEAR_MASS
+		// btScalar massTerm = btScalar(1.) / (body1.getInvMass() + body2.getInvMass());
+		// impulse = - contactDamping * rel_vel * massTerm;
+		// #else
 		float velocityImpulse = -contactDamping * rel_vel * jacDiagABInv;
 		impulse[0] = velocityImpulse;
-		//#endif
+		// #endif
 	}
 
 	/**
 	 * Response between two dynamic objects with friction.
 	 */
-	public static float resolveSingleCollision(
-			RigidBody body1,
-			RigidBody body2,
-			ManifoldPoint contactPoint,
+	public static float resolveSingleCollision(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
 			ContactSolverInfo solverInfo) {
-		
-		Vector3f tmpVec = Stack.alloc(Vector3f.class);
 
-		Vector3f pos1_ = contactPoint.getPositionWorldOnA(Stack.alloc(Vector3f.class));
-		Vector3f pos2_ = contactPoint.getPositionWorldOnB(Stack.alloc(Vector3f.class));
+		Vector3f tmpVec = new Vector3f();
+
+		Vector3f pos1_ = contactPoint.getPositionWorldOnA(new Vector3f());
+		Vector3f pos2_ = contactPoint.getPositionWorldOnB(new Vector3f());
 		Vector3f normal = contactPoint.normalWorldOnB;
 
 		// constant over all iterations
-		Vector3f rel_pos1 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos1 = new Vector3f();
 		rel_pos1.sub(pos1_, body1.getCenterOfMassPosition(tmpVec));
 
-		Vector3f rel_pos2 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos2 = new Vector3f();
 		rel_pos2.sub(pos2_, body2.getCenterOfMassPosition(tmpVec));
 
-		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, Stack.alloc(Vector3f.class));
-		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, Stack.alloc(Vector3f.class));
-		Vector3f vel = Stack.alloc(Vector3f.class);
+		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, new Vector3f());
+		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, new Vector3f());
+		Vector3f vel = new Vector3f();
 		vel.sub(vel1, vel2);
 
 		float rel_vel;
@@ -192,8 +185,8 @@ public class ContactConstraint {
 
 		normalImpulse = cpd.appliedImpulse - oldNormalImpulse;
 
-		//#ifdef USE_INTERNAL_APPLY_IMPULSE
-		Vector3f tmp = Stack.alloc(Vector3f.class);
+		// #ifdef USE_INTERNAL_APPLY_IMPULSE
+		Vector3f tmp = new Vector3f();
 		if (body1.getInvMass() != 0f) {
 			tmp.scale(body1.getInvMass(), contactPoint.normalWorldOnB);
 			body1.internalApplyImpulse(tmp, cpd.angularComponentA, normalImpulse);
@@ -202,29 +195,26 @@ public class ContactConstraint {
 			tmp.scale(body2.getInvMass(), contactPoint.normalWorldOnB);
 			body2.internalApplyImpulse(tmp, cpd.angularComponentB, -normalImpulse);
 		}
-		//#else //USE_INTERNAL_APPLY_IMPULSE
-		//	body1.applyImpulse(normal*(normalImpulse), rel_pos1);
-		//	body2.applyImpulse(-normal*(normalImpulse), rel_pos2);
-		//#endif //USE_INTERNAL_APPLY_IMPULSE
+		// #else //USE_INTERNAL_APPLY_IMPULSE
+		// body1.applyImpulse(normal*(normalImpulse), rel_pos1);
+		// body2.applyImpulse(-normal*(normalImpulse), rel_pos2);
+		// #endif //USE_INTERNAL_APPLY_IMPULSE
 
 		return normalImpulse;
 	}
-	
-	public static float resolveSingleFriction(
-			RigidBody body1,
-			RigidBody body2,
-			ManifoldPoint contactPoint,
-			ContactSolverInfo solverInfo) {
-		
-		Vector3f tmpVec = Stack.alloc(Vector3f.class);
-		
-		Vector3f pos1 = contactPoint.getPositionWorldOnA(Stack.alloc(Vector3f.class));
-		Vector3f pos2 = contactPoint.getPositionWorldOnB(Stack.alloc(Vector3f.class));
 
-		Vector3f rel_pos1 = Stack.alloc(Vector3f.class);
+	public static float resolveSingleFriction(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
+			ContactSolverInfo solverInfo) {
+
+		Vector3f tmpVec = new Vector3f();
+
+		Vector3f pos1 = contactPoint.getPositionWorldOnA(new Vector3f());
+		Vector3f pos2 = contactPoint.getPositionWorldOnB(new Vector3f());
+
+		Vector3f rel_pos1 = new Vector3f();
 		rel_pos1.sub(pos1, body1.getCenterOfMassPosition(tmpVec));
 
-		Vector3f rel_pos2 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos2 = new Vector3f();
 		rel_pos2.sub(pos2, body2.getCenterOfMassPosition(tmpVec));
 
 		ConstraintPersistentData cpd = (ConstraintPersistentData) contactPoint.userPersistentData;
@@ -234,18 +224,18 @@ public class ContactConstraint {
 
 		float limit = cpd.appliedImpulse * combinedFriction;
 
-		if (cpd.appliedImpulse > 0f) //friction
+		if (cpd.appliedImpulse > 0f) // friction
 		{
-			//apply friction in the 2 tangential directions
+			// apply friction in the 2 tangential directions
 
 			// 1st tangent
-			Vector3f vel1 = Stack.alloc(Vector3f.class);
+			Vector3f vel1 = new Vector3f();
 			body1.getVelocityInLocalPoint(rel_pos1, vel1);
 
-			Vector3f vel2 = Stack.alloc(Vector3f.class);
+			Vector3f vel2 = new Vector3f();
 			body2.getVelocityInLocalPoint(rel_pos2, vel2);
 
-			Vector3f vel = Stack.alloc(Vector3f.class);
+			Vector3f vel = new Vector3f();
 			vel.sub(vel1, vel2);
 
 			float j1, j2;
@@ -277,8 +267,8 @@ public class ContactConstraint {
 				j2 = cpd.accumulatedTangentImpulse1 - oldTangentImpulse;
 			}
 
-			//#ifdef USE_INTERNAL_APPLY_IMPULSE
-			Vector3f tmp = Stack.alloc(Vector3f.class);
+			// #ifdef USE_INTERNAL_APPLY_IMPULSE
+			Vector3f tmp = new Vector3f();
 
 			if (body1.getInvMass() != 0f) {
 				tmp.scale(body1.getInvMass(), cpd.frictionWorldTangential0);
@@ -294,39 +284,38 @@ public class ContactConstraint {
 				tmp.scale(body2.getInvMass(), cpd.frictionWorldTangential1);
 				body2.internalApplyImpulse(tmp, cpd.frictionAngularComponent1B, -j2);
 			}
-			//#else //USE_INTERNAL_APPLY_IMPULSE
-			//	body1.applyImpulse((j1 * cpd->m_frictionWorldTangential0)+(j2 * cpd->m_frictionWorldTangential1), rel_pos1);
-			//	body2.applyImpulse((j1 * -cpd->m_frictionWorldTangential0)+(j2 * -cpd->m_frictionWorldTangential1), rel_pos2);
-			//#endif //USE_INTERNAL_APPLY_IMPULSE
+			// #else //USE_INTERNAL_APPLY_IMPULSE
+			// body1.applyImpulse((j1 * cpd->m_frictionWorldTangential0)+(j2 *
+			// cpd->m_frictionWorldTangential1), rel_pos1);
+			// body2.applyImpulse((j1 * -cpd->m_frictionWorldTangential0)+(j2 *
+			// -cpd->m_frictionWorldTangential1), rel_pos2);
+			// #endif //USE_INTERNAL_APPLY_IMPULSE
 		}
 		return cpd.appliedImpulse;
 	}
-	
+
 	/**
 	 * velocity + friction<br>
 	 * response between two dynamic objects with friction
 	 */
-	public static float resolveSingleCollisionCombined(
-			RigidBody body1,
-			RigidBody body2,
-			ManifoldPoint contactPoint,
+	public static float resolveSingleCollisionCombined(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
 			ContactSolverInfo solverInfo) {
-		
-		Vector3f tmpVec = Stack.alloc(Vector3f.class);
-		
-		Vector3f pos1 = contactPoint.getPositionWorldOnA(Stack.alloc(Vector3f.class));
-		Vector3f pos2 = contactPoint.getPositionWorldOnB(Stack.alloc(Vector3f.class));
+
+		Vector3f tmpVec = new Vector3f();
+
+		Vector3f pos1 = contactPoint.getPositionWorldOnA(new Vector3f());
+		Vector3f pos2 = contactPoint.getPositionWorldOnB(new Vector3f());
 		Vector3f normal = contactPoint.normalWorldOnB;
 
-		Vector3f rel_pos1 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos1 = new Vector3f();
 		rel_pos1.sub(pos1, body1.getCenterOfMassPosition(tmpVec));
 
-		Vector3f rel_pos2 = Stack.alloc(Vector3f.class);
+		Vector3f rel_pos2 = new Vector3f();
 		rel_pos2.sub(pos2, body2.getCenterOfMassPosition(tmpVec));
 
-		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, Stack.alloc(Vector3f.class));
-		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, Stack.alloc(Vector3f.class));
-		Vector3f vel = Stack.alloc(Vector3f.class);
+		Vector3f vel1 = body1.getVelocityInLocalPoint(rel_pos1, new Vector3f());
+		Vector3f vel2 = body2.getVelocityInLocalPoint(rel_pos2, new Vector3f());
+		Vector3f vel = new Vector3f();
 		vel.sub(vel1, vel2);
 
 		float rel_vel;
@@ -334,7 +323,7 @@ public class ContactConstraint {
 
 		float Kfps = 1f / solverInfo.timeStep;
 
-		//btScalar damping = solverInfo.m_damping ;
+		// btScalar damping = solverInfo.m_damping ;
 		float Kerp = solverInfo.erp;
 		float Kcor = Kerp * Kfps;
 
@@ -357,9 +346,8 @@ public class ContactConstraint {
 
 		normalImpulse = cpd.appliedImpulse - oldNormalImpulse;
 
-
-		//#ifdef USE_INTERNAL_APPLY_IMPULSE
-		Vector3f tmp = Stack.alloc(Vector3f.class);
+		// #ifdef USE_INTERNAL_APPLY_IMPULSE
+		Vector3f tmp = new Vector3f();
 		if (body1.getInvMass() != 0f) {
 			tmp.scale(body1.getInvMass(), contactPoint.normalWorldOnB);
 			body1.internalApplyImpulse(tmp, cpd.angularComponentA, normalImpulse);
@@ -368,13 +356,13 @@ public class ContactConstraint {
 			tmp.scale(body2.getInvMass(), contactPoint.normalWorldOnB);
 			body2.internalApplyImpulse(tmp, cpd.angularComponentB, -normalImpulse);
 		}
-		//#else //USE_INTERNAL_APPLY_IMPULSE
-		//	body1.applyImpulse(normal*(normalImpulse), rel_pos1);
-		//	body2.applyImpulse(-normal*(normalImpulse), rel_pos2);
-		//#endif //USE_INTERNAL_APPLY_IMPULSE
+		// #else //USE_INTERNAL_APPLY_IMPULSE
+		// body1.applyImpulse(normal*(normalImpulse), rel_pos1);
+		// body2.applyImpulse(-normal*(normalImpulse), rel_pos2);
+		// #endif //USE_INTERNAL_APPLY_IMPULSE
 
 		{
-			//friction
+			// friction
 			body1.getVelocityInLocalPoint(rel_pos1, vel1);
 			body2.getVelocityInLocalPoint(rel_pos2, vel2);
 			vel.sub(vel1, vel2);
@@ -382,7 +370,7 @@ public class ContactConstraint {
 			rel_vel = normal.dot(vel);
 
 			tmp.scale(rel_vel, normal);
-			Vector3f lat_vel = Stack.alloc(Vector3f.class);
+			Vector3f lat_vel = new Vector3f();
 			lat_vel.sub(vel, tmp);
 			float lat_rel_vel = lat_vel.length();
 
@@ -392,24 +380,23 @@ public class ContactConstraint {
 				if (lat_rel_vel > BulletGlobals.FLT_EPSILON) {
 					lat_vel.scale(1f / lat_rel_vel);
 
-					Vector3f temp1 = Stack.alloc(Vector3f.class);
+					Vector3f temp1 = new Vector3f();
 					temp1.cross(rel_pos1, lat_vel);
-					body1.getInvInertiaTensorWorld(Stack.alloc(Matrix3f.class)).transform(temp1);
+					body1.getInvInertiaTensorWorld(new Matrix3f()).transform(temp1);
 
-					Vector3f temp2 = Stack.alloc(Vector3f.class);
+					Vector3f temp2 = new Vector3f();
 					temp2.cross(rel_pos2, lat_vel);
-					body2.getInvInertiaTensorWorld(Stack.alloc(Matrix3f.class)).transform(temp2);
+					body2.getInvInertiaTensorWorld(new Matrix3f()).transform(temp2);
 
-					Vector3f java_tmp1 = Stack.alloc(Vector3f.class);
+					Vector3f java_tmp1 = new Vector3f();
 					java_tmp1.cross(temp1, rel_pos1);
 
-					Vector3f java_tmp2 = Stack.alloc(Vector3f.class);
+					Vector3f java_tmp2 = new Vector3f();
 					java_tmp2.cross(temp2, rel_pos2);
 
 					tmp.add(java_tmp1, java_tmp2);
 
-					float friction_impulse = lat_rel_vel /
-							(body1.getInvMass() + body2.getInvMass() + lat_vel.dot(tmp));
+					float friction_impulse = lat_rel_vel / (body1.getInvMass() + body2.getInvMass() + lat_vel.dot(tmp));
 					float normal_impulse = cpd.appliedImpulse * combinedFriction;
 
 					friction_impulse = Math.min(friction_impulse, normal_impulse);
@@ -427,12 +414,9 @@ public class ContactConstraint {
 		return normalImpulse;
 	}
 
-	public static float resolveSingleFrictionEmpty(
-			RigidBody body1,
-			RigidBody body2,
-			ManifoldPoint contactPoint,
+	public static float resolveSingleFrictionEmpty(RigidBody body1, RigidBody body2, ManifoldPoint contactPoint,
 			ContactSolverInfo solverInfo) {
 		return 0f;
 	}
-	
+
 }

@@ -23,15 +23,16 @@
 
 package com.bulletphysics.collision.shapes;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.BulletGlobals;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
- * ConvexInternalShape is an internal base class, shared by most convex shape implementations.
+ * ConvexInternalShape is an internal base class, shared by most convex shape
+ * implementations.
  * 
  * @author jezek2
  */
@@ -43,28 +44,28 @@ public abstract class ConvexInternalShape extends ConvexShape {
 	protected float collisionMargin = BulletGlobals.CONVEX_DISTANCE_MARGIN;
 
 	/**
-	 * getAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version.
+	 * getAabb's default implementation is brute force, expected derived classes to
+	 * implement a fast dedicated version.
 	 */
 	@Override
 	public void getAabb(Transform t, Vector3f aabbMin, Vector3f aabbMax) {
 		getAabbSlow(t, aabbMin, aabbMax);
 	}
-	
+
 	@Override
 	public void getAabbSlow(Transform trans, Vector3f minAabb, Vector3f maxAabb) {
 		float margin = getMargin();
-		Vector3f vec = Stack.alloc(Vector3f.class);
-		Vector3f tmp1 = Stack.alloc(Vector3f.class);
-		Vector3f tmp2 = Stack.alloc(Vector3f.class);
-		
-		for (int i=0;i<3;i++)
-		{
+		Vector3f vec = new Vector3f();
+		Vector3f tmp1 = new Vector3f();
+		Vector3f tmp2 = new Vector3f();
+
+		for (int i = 0; i < 3; i++) {
 			vec.set(0f, 0f, 0f);
 			VectorUtil.setCoord(vec, i, 1f);
 
 			MatrixUtil.transposeTransform(tmp1, vec, trans.basis);
 			localGetSupportingVertex(tmp1, tmp2);
-			
+
 			trans.transform(tmp2);
 
 			VectorUtil.setCoord(maxAabb, i, VectorUtil.getCoord(tmp2, i) + margin);
@@ -84,7 +85,7 @@ public abstract class ConvexInternalShape extends ConvexShape {
 		Vector3f supVertex = localGetSupportingVertexWithoutMargin(vec, out);
 
 		if (getMargin() != 0f) {
-			Vector3f vecnorm = Stack.alloc(vec);
+			Vector3f vecnorm = new Vector3f(vec);
 			if (vecnorm.lengthSquared() < (BulletGlobals.FLT_EPSILON * BulletGlobals.FLT_EPSILON)) {
 				vecnorm.set(-1f, -1f, -1f);
 			}
@@ -93,11 +94,11 @@ public abstract class ConvexInternalShape extends ConvexShape {
 		}
 		return out;
 	}
-	
+
 	public void setLocalScaling(Vector3f scaling) {
 		localScaling.absolute(scaling);
 	}
-	
+
 	public Vector3f getLocalScaling(Vector3f out) {
 		out.set(localScaling);
 		return out;
@@ -120,5 +121,5 @@ public abstract class ConvexInternalShape extends ConvexShape {
 	public void getPreferredPenetrationDirection(int index, Vector3f penetrationVector) {
 		throw new InternalError();
 	}
-	
+
 }

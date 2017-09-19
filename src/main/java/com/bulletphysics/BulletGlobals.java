@@ -25,7 +25,6 @@ package com.bulletphysics;
 
 import com.bulletphysics.util.ArrayPool;
 import com.bulletphysics.util.ObjectPool;
-import cz.advel.stack.Stack;
 
 /**
  * Bullet global settings and constants.
@@ -33,13 +32,13 @@ import cz.advel.stack.Stack;
  * @author jezek2
  */
 public class BulletGlobals {
-	
+
 	public static final boolean DEBUG = false;
-	
+
 	public static final float CONVEX_DISTANCE_MARGIN = 0.04f;
 	public static final float FLT_EPSILON = 1.19209290e-07f;
 	public static final float SIMD_EPSILON = FLT_EPSILON;
-	
+
 	public static final float SIMD_2_PI = 6.283185307179586232f;
 	public static final float SIMD_PI = SIMD_2_PI * 0.5f;
 	public static final float SIMD_HALF_PI = SIMD_2_PI * 0.25f;
@@ -64,7 +63,7 @@ public class BulletGlobals {
 	// RigidBody
 	private float deactivationTime = 2f;
 	private boolean disableDeactivation = false;
-	
+
 	public static ContactAddedCallback getContactAddedCallback() {
 		return threadLocal.get().gContactAddedCallback;
 	}
@@ -88,7 +87,7 @@ public class BulletGlobals {
 	public static void setContactProcessedCallback(ContactProcessedCallback callback) {
 		threadLocal.get().gContactProcessedCallback = callback;
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
 
 	public static float getContactBreakingThreshold() {
@@ -122,7 +121,6 @@ public class BulletGlobals {
 	 */
 	public static void cleanCurrentThread() {
 		threadLocal.remove();
-		Stack.libraryCleanCurrentThread();
 		ObjectPool.cleanCurrentThread();
 		ArrayPool.cleanCurrentThread();
 	}

@@ -27,33 +27,36 @@
 
 package com.bulletphysics.extras.gimpact;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.collision.shapes.StridingMeshInterface;
 import com.bulletphysics.collision.shapes.TriangleCallback;
 import com.bulletphysics.extras.gimpact.BoxCollision.AABB;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.util.IntArrayList;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
- * This class manages a sub part of a mesh supplied by the StridingMeshInterface interface.<p>
+ * This class manages a sub part of a mesh supplied by the StridingMeshInterface
+ * interface.
+ * <p>
  * 
- * - Simply create this shape by passing the StridingMeshInterface to the constructor
- *   GImpactMeshShapePart, then you must call updateBound() after creating the mesh<br>
- * - When making operations with this shape, you must call <b>lock</b> before accessing
- *   to the trimesh primitives, and then call <b>unlock</b><br>
- * - You can handle deformable meshes with this shape, by calling postUpdate() every time
- *   when changing the mesh vertices.
+ * - Simply create this shape by passing the StridingMeshInterface to the
+ * constructor GImpactMeshShapePart, then you must call updateBound() after
+ * creating the mesh<br>
+ * - When making operations with this shape, you must call <b>lock</b> before
+ * accessing to the trimesh primitives, and then call <b>unlock</b><br>
+ * - You can handle deformable meshes with this shape, by calling postUpdate()
+ * every time when changing the mesh vertices.
  * 
  * @author jezek2
  */
 public class GImpactMeshShapePart extends GImpactShapeInterface {
 
 	TrimeshPrimitiveManager primitive_manager = new TrimeshPrimitiveManager();
-	
+
 	private final IntArrayList collided = new IntArrayList();
-	
+
 	public GImpactMeshShapePart() {
 		box_set.setPrimitiveManager(primitive_manager);
 	}
@@ -107,7 +110,7 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 	PrimitiveManagerBase getPrimitiveManager() {
 		return primitive_manager;
 	}
-	
+
 	TrimeshPrimitiveManager getTrimeshPrimitiveManager() {
 		return primitive_manager;
 	}
@@ -115,15 +118,15 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 	@Override
 	public void calculateLocalInertia(float mass, Vector3f inertia) {
 		lockChildShapes();
-		
-		//#define CALC_EXACT_INERTIA 1
-		//#ifdef CALC_EXACT_INERTIA
+
+		// #define CALC_EXACT_INERTIA 1
+		// #ifdef CALC_EXACT_INERTIA
 		inertia.set(0f, 0f, 0f);
 
 		int i = getVertexCount();
-		float pointmass = mass / (float)i;
+		float pointmass = mass / (float) i;
 
-		Vector3f pointintertia = Stack.alloc(Vector3f.class);
+		Vector3f pointintertia = new Vector3f();
 
 		while ((i--) != 0) {
 			getVertex(i, pointintertia);
@@ -131,22 +134,22 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 			inertia.add(pointintertia);
 		}
 
-		//#else
+		// #else
 		//
 		//// Calc box inertia
 		//
-		//float lx= localAABB.max.x - localAABB.min.x;
-		//float ly= localAABB.max.y - localAABB.min.y;
-		//float lz= localAABB.max.z - localAABB.min.z;
-		//float x2 = lx*lx;
-		//float y2 = ly*ly;
-		//float z2 = lz*lz;
-		//float scaledmass = mass * 0.08333333f;
+		// float lx= localAABB.max.x - localAABB.min.x;
+		// float ly= localAABB.max.y - localAABB.min.y;
+		// float lz= localAABB.max.z - localAABB.min.z;
+		// float x2 = lx*lx;
+		// float y2 = ly*ly;
+		// float z2 = lz*lz;
+		// float scaledmass = mass * 0.08333333f;
 		//
-		//inertia.set(y2+z2,x2+z2,x2+y2);
-		//inertia.scale(scaledmass);
+		// inertia.set(y2+z2,x2+z2,x2+y2);
+		// inertia.scale(scaledmass);
 		//
-		//#endif
+		// #endif
 		unlockChildShapes();
 	}
 
@@ -154,7 +157,7 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 	public String getName() {
 		return "GImpactMeshShapePart";
 	}
-	
+
 	@Override
 	ShapeType getGImpactShapeType() {
 		return ShapeType.TRIMESH_SHAPE_PART;
@@ -176,7 +179,7 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 	}
 
 	@Override
-	void getBulletTetrahedron( int prim_index, TetrahedronShapeEx tetrahedron) {
+	void getBulletTetrahedron(int prim_index, TetrahedronShapeEx tetrahedron) {
 		assert (false);
 	}
 
@@ -218,7 +221,7 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 	@Override
 	public void processAllTriangles(TriangleCallback callback, Vector3f aabbMin, Vector3f aabbMax) {
 		lockChildShapes();
-		AABB box = Stack.alloc(AABB.class);
+		AABB box = new AABB();
 		box.min.set(aabbMin);
 		box.max.set(aabbMax);
 
@@ -231,7 +234,7 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 		}
 
 		int part = getPart();
-		PrimitiveTriangle triangle = Stack.alloc(PrimitiveTriangle.class);
+		PrimitiveTriangle triangle = new PrimitiveTriangle();
 		int i = collided.size();
 		while ((i--) != 0) {
 			getPrimitiveTriangle(collided.get(i), triangle);
@@ -239,5 +242,5 @@ public class GImpactMeshShapePart extends GImpactShapeInterface {
 		}
 		unlockChildShapes();
 	}
-	
+
 }

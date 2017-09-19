@@ -23,30 +23,30 @@
 
 package com.bulletphysics.linearmath;
 
-import com.bulletphysics.collision.shapes.UniformScalingShape;
-import cz.advel.stack.Stack;
-import cz.advel.stack.StaticAlloc;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
 
+import com.bulletphysics.collision.shapes.UniformScalingShape;
+
 /**
  * Transform represents translation and rotation (rigid transform). Scaling and
- * shearing is not supported.<p>
+ * shearing is not supported.
+ * <p>
  * 
- * You can use local shape scaling or {@link UniformScalingShape} for static rescaling
- * of collision objects.
+ * You can use local shape scaling or {@link UniformScalingShape} for static
+ * rescaling of collision objects.
  * 
  * @author jezek2
  */
 public class Transform {
-	
-	//protected BulletStack stack;
+
+	// protected BulletStack stack;
 
 	/** Rotation matrix of this Transform. */
 	public final Matrix3f basis = new Matrix3f();
-	
+
 	/** Translation vector of this Transform. */
 	public final Vector3f origin = new Vector3f();
 
@@ -64,12 +64,12 @@ public class Transform {
 	public Transform(Transform tr) {
 		set(tr);
 	}
-	
+
 	public void set(Transform tr) {
 		basis.set(tr.basis);
 		origin.set(tr.origin);
 	}
-	
+
 	public void set(Matrix3f mat) {
 		basis.set(mat);
 		origin.set(0f, 0f, 0f);
@@ -79,7 +79,7 @@ public class Transform {
 		mat.getRotationScale(basis);
 		origin.set(mat.m03, mat.m13, mat.m23);
 	}
-	
+
 	public void transform(Vector3f v) {
 		basis.transform(v);
 		v.add(origin);
@@ -89,7 +89,7 @@ public class Transform {
 		basis.setIdentity();
 		origin.set(0f, 0f, 0f);
 	}
-	
+
 	public void inverse() {
 		basis.transpose();
 		origin.scale(-1f);
@@ -100,41 +100,40 @@ public class Transform {
 		set(tr);
 		inverse();
 	}
-	
+
 	public void mul(Transform tr) {
-		Vector3f vec = Stack.alloc(tr.origin);
+		Vector3f vec = new Vector3f(tr.origin);
 		transform(vec);
 
 		basis.mul(tr.basis);
 		origin.set(vec);
 	}
 
-	@StaticAlloc
 	public void mul(Transform tr1, Transform tr2) {
-		Vector3f vec = Stack.alloc(tr2.origin);
+		Vector3f vec = new Vector3f(tr2.origin);
 		tr1.transform(vec);
 
 		basis.mul(tr1.basis, tr2.basis);
 		origin.set(vec);
 	}
-	
+
 	public void invXform(Vector3f inVec, Vector3f out) {
 		out.sub(inVec, origin);
 
-		Matrix3f mat = Stack.alloc(basis);
+		Matrix3f mat = new Matrix3f(basis);
 		mat.transpose();
 		mat.transform(out);
 	}
-	
+
 	public Quat4f getRotation(Quat4f out) {
 		MatrixUtil.getRotation(basis, out);
 		return out;
 	}
-	
+
 	public void setRotation(Quat4f q) {
 		MatrixUtil.setRotation(basis, q);
 	}
-	
+
 	public void setFromOpenGLMatrix(float[] m) {
 		MatrixUtil.setFromOpenGLSubMatrix(basis, m);
 		origin.set(m[12], m[13], m[14]);
@@ -158,8 +157,9 @@ public class Transform {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof Transform)) return false;
-		Transform tr = (Transform)obj;
+		if (obj == null || !(obj instanceof Transform))
+			return false;
+		Transform tr = (Transform) obj;
 		return basis.equals(tr.basis) && origin.equals(tr.origin);
 	}
 
@@ -170,5 +170,5 @@ public class Transform {
 		hash = 41 * hash + origin.hashCode();
 		return hash;
 	}
-	
+
 }

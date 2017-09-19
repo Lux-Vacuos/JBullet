@@ -25,4 +25,3 @@
  * Contains global variables and callbacks.
  */
 package com.bulletphysics;
-

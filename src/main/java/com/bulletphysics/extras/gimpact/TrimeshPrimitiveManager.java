@@ -27,12 +27,12 @@
 
 package com.bulletphysics.extras.gimpact;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.shapes.StridingMeshInterface;
 import com.bulletphysics.collision.shapes.VertexData;
 import com.bulletphysics.extras.gimpact.BoxCollision.AABB;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  *
@@ -49,7 +49,7 @@ class TrimeshPrimitiveManager extends PrimitiveManagerBase {
 	private final int[] tmpIndices = new int[3];
 
 	private VertexData vertexData;
-	
+
 	public TrimeshPrimitiveManager() {
 		meshInterface = null;
 		part = 0;
@@ -96,7 +96,7 @@ class TrimeshPrimitiveManager extends PrimitiveManagerBase {
 		vertexData = null;
 		lock_count = 0;
 	}
-	
+
 	@Override
 	public boolean is_trimesh() {
 		return true;
@@ -104,7 +104,7 @@ class TrimeshPrimitiveManager extends PrimitiveManagerBase {
 
 	@Override
 	public int get_primitive_count() {
-		return vertexData.getIndexCount()/3;
+		return vertexData.getIndexCount() / 3;
 	}
 
 	public int get_vertex_count() {
@@ -112,23 +112,22 @@ class TrimeshPrimitiveManager extends PrimitiveManagerBase {
 	}
 
 	public void get_indices(int face_index, int[] out) {
-		out[0] = vertexData.getIndex(face_index*3+0);
-		out[1] = vertexData.getIndex(face_index*3+1);
-		out[2] = vertexData.getIndex(face_index*3+2);
+		out[0] = vertexData.getIndex(face_index * 3 + 0);
+		out[1] = vertexData.getIndex(face_index * 3 + 1);
+		out[2] = vertexData.getIndex(face_index * 3 + 2);
 	}
 
 	public void get_vertex(int vertex_index, Vector3f vertex) {
 		vertexData.getVertex(vertex_index, vertex);
 		VectorUtil.mul(vertex, vertex, scale);
 	}
-	
+
 	@Override
 	public void get_primitive_box(int prim_index, AABB primbox) {
-		PrimitiveTriangle triangle = Stack.alloc(PrimitiveTriangle.class);
+		PrimitiveTriangle triangle = new PrimitiveTriangle();
 		get_primitive_triangle(prim_index, triangle);
-		primbox.calc_from_triangle_margin(
-				triangle.vertices[0],
-				triangle.vertices[1], triangle.vertices[2], triangle.margin);
+		primbox.calc_from_triangle_margin(triangle.vertices[0], triangle.vertices[1], triangle.vertices[2],
+				triangle.margin);
 	}
 
 	@Override
@@ -147,5 +146,5 @@ class TrimeshPrimitiveManager extends PrimitiveManagerBase {
 		get_vertex(tmpIndices[2], triangle.vertices1[2]);
 		triangle.setMargin(margin);
 	}
-	
+
 }

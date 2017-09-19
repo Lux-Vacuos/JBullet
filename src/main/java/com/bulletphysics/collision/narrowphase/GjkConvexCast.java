@@ -23,13 +23,13 @@
 
 package com.bulletphysics.collision.narrowphase;
 
-import com.bulletphysics.util.ObjectPool;
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.narrowphase.DiscreteCollisionDetectorInterface.ClosestPointInput;
 import com.bulletphysics.collision.shapes.ConvexShape;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
+import com.bulletphysics.util.ObjectPool;
 
 /**
  * GjkConvexCast performs a raycast on a convex object using support mapping.
@@ -38,19 +38,19 @@ import javax.vecmath.Vector3f;
  */
 public class GjkConvexCast extends ConvexCast {
 
-	//protected final BulletStack stack = BulletStack.get();
+	// protected final BulletStack stack = BulletStack.get();
 	protected final ObjectPool<ClosestPointInput> pointInputsPool = ObjectPool.get(ClosestPointInput.class);
 
-//#ifdef BT_USE_DOUBLE_PRECISION
-//	private static final int MAX_ITERATIONS = 64;
-//#else
+	// #ifdef BT_USE_DOUBLE_PRECISION
+	// private static final int MAX_ITERATIONS = 64;
+	// #else
 	private static final int MAX_ITERATIONS = 32;
-//#endif
-	
+	// #endif
+
 	private SimplexSolverInterface simplexSolver;
 	private ConvexShape convexA;
 	private ConvexShape convexB;
-	
+
 	private GjkPairDetector gjk = new GjkPairDetector();
 
 	public GjkConvexCast(ConvexShape convexA, ConvexShape convexB, SimplexSolverInterface simplexSolver) {
@@ -58,51 +58,51 @@ public class GjkConvexCast extends ConvexCast {
 		this.convexA = convexA;
 		this.convexB = convexB;
 	}
-	
+
 	public boolean calcTimeOfImpact(Transform fromA, Transform toA, Transform fromB, Transform toB, CastResult result) {
 		simplexSolver.reset();
 
 		// compute linear velocity for this interval, to interpolate
 		// assume no rotation/angular velocity, assert here?
-		Vector3f linVelA = Stack.alloc(Vector3f.class);
-		Vector3f linVelB = Stack.alloc(Vector3f.class);
+		Vector3f linVelA = new Vector3f();
+		Vector3f linVelB = new Vector3f();
 
 		linVelA.sub(toA.origin, fromA.origin);
 		linVelB.sub(toB.origin, fromB.origin);
 
 		float radius = 0.001f;
 		float lambda = 0f;
-		Vector3f v = Stack.alloc(Vector3f.class);
+		Vector3f v = new Vector3f();
 		v.set(1f, 0f, 0f);
 
 		int maxIter = MAX_ITERATIONS;
 
-		Vector3f n = Stack.alloc(Vector3f.class);
+		Vector3f n = new Vector3f();
 		n.set(0f, 0f, 0f);
 		boolean hasResult = false;
-		Vector3f c = Stack.alloc(Vector3f.class);
-		Vector3f r = Stack.alloc(Vector3f.class);
+		Vector3f c = new Vector3f();
+		Vector3f r = new Vector3f();
 		r.sub(linVelA, linVelB);
 
 		float lastLambda = lambda;
-		//btScalar epsilon = btScalar(0.001);
+		// btScalar epsilon = btScalar(0.001);
 
 		int numIter = 0;
 		// first solution, using GJK
 
-		Transform identityTrans = Stack.alloc(Transform.class);
+		Transform identityTrans = new Transform();
 		identityTrans.setIdentity();
 
-		//result.drawCoordSystem(sphereTr);
+		// result.drawCoordSystem(sphereTr);
 
 		PointCollector pointCollector = new PointCollector();
 
-		gjk.init(convexA, convexB, simplexSolver, null); // penetrationDepthSolver);		
+		gjk.init(convexA, convexB, simplexSolver, null); // penetrationDepthSolver);
 		ClosestPointInput input = pointInputsPool.get();
 		input.init();
 		try {
 			// we don't use margins during CCD
-			//	gjk.setIgnoreMargin(true);
+			// gjk.setIgnoreMargin(true);
 
 			input.transformA.set(fromA);
 			input.transformB.set(fromB);
@@ -134,13 +134,13 @@ public class GjkConvexCast extends ConvexCast {
 						return false;
 					}
 					if (lambda < 0f) {
-						return false;					// todo: next check with relative epsilon
+						return false; // todo: next check with relative epsilon
 					}
-					
+
 					if (lambda <= lastLambda) {
 						return false;
-					//n.setValue(0,0,0);
-					//break;
+						// n.setValue(0,0,0);
+						// break;
 					}
 					lastLambda = lambda;
 
@@ -161,8 +161,7 @@ public class GjkConvexCast extends ConvexCast {
 						c.set(pointCollector.pointInWorld);
 						n.set(pointCollector.normalOnBInWorld);
 						dist = pointCollector.distance;
-					}
-					else {
+					} else {
 						// ??
 						return false;
 					}
@@ -170,7 +169,8 @@ public class GjkConvexCast extends ConvexCast {
 				}
 
 				// is n normalized?
-				// don't report time of impact for motion away from the contact normal (or causes minor penetration)
+				// don't report time of impact for motion away from the contact normal (or
+				// causes minor penetration)
 				if (n.dot(r) >= -result.allowedPenetration) {
 					return false;
 				}
@@ -181,10 +181,9 @@ public class GjkConvexCast extends ConvexCast {
 			}
 
 			return false;
-		}
-		finally {
+		} finally {
 			pointInputsPool.release(input);
 		}
 	}
-	
+
 }

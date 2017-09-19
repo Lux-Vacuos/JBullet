@@ -26,12 +26,12 @@
 
 package com.bulletphysics.collision.broadphase;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.BulletStats;
 import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.VectorUtil;
 import com.bulletphysics.util.ObjectArrayList;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * AxisSweep3Internal is an internal base class that implements sweep and prune.
@@ -39,36 +39,39 @@ import javax.vecmath.Vector3f;
  * 
  * @author jezek2
  */
-public abstract class AxisSweep3Internal extends BroadphaseInterface {
+public abstract class AxisSweep3Internal implements BroadphaseInterface {
 
 	protected int bpHandleMask;
 	protected int handleSentinel;
-	
+
 	protected final Vector3f worldAabbMin = new Vector3f(); // overall system bounds
 	protected final Vector3f worldAabbMax = new Vector3f(); // overall system bounds
 
-	protected final Vector3f quantize = new Vector3f();     // scaling factor for quantization
+	protected final Vector3f quantize = new Vector3f(); // scaling factor for quantization
 
-	protected int numHandles;                               // number of active handles
-	protected int maxHandles;                               // max number of handles
-	protected Handle[] pHandles;                            // handles pool
-	protected int firstFreeHandle;		                    // free handles list
+	protected int numHandles; // number of active handles
+	protected int maxHandles; // max number of handles
+	protected Handle[] pHandles; // handles pool
+	protected int firstFreeHandle; // free handles list
 
-	protected EdgeArray[] pEdges = new EdgeArray[3];      // edge arrays for the 3 axes (each array has m_maxHandles * 2 + 2 sentinel entries)
+	protected EdgeArray[] pEdges = new EdgeArray[3]; // edge arrays for the 3 axes (each array has m_maxHandles * 2 + 2
+														// sentinel entries)
 
 	protected OverlappingPairCache pairCache;
-	
-	// OverlappingPairCallback is an additional optional user callback for adding/removing overlapping pairs, similar interface to OverlappingPairCache.
+
+	// OverlappingPairCallback is an additional optional user callback for
+	// adding/removing overlapping pairs, similar interface to OverlappingPairCache.
 	protected OverlappingPairCallback userPairCallback = null;
-	
+
 	protected boolean ownsPairCache = false;
 
 	protected int invalidPair = 0;
-	
+
 	// JAVA NOTE: added
 	protected int mask;
-	
-	AxisSweep3Internal(Vector3f worldAabbMin, Vector3f worldAabbMax, int handleMask, int handleSentinel, int userMaxHandles/* = 16384*/, OverlappingPairCache pairCache/*=0*/) {
+
+	AxisSweep3Internal(Vector3f worldAabbMin, Vector3f worldAabbMax, int handleMask, int handleSentinel,
+			int userMaxHandles/* = 16384 */, OverlappingPairCache pairCache/* =0 */) {
 		this.bpHandleMask = handleMask;
 		this.handleSentinel = handleSentinel;
 		this.pairCache = pairCache;
@@ -80,13 +83,13 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			ownsPairCache = true;
 		}
 
-		//assert(bounds.HasVolume());
+		// assert(bounds.HasVolume());
 
 		// init bounds
 		this.worldAabbMin.set(worldAabbMin);
 		this.worldAabbMax.set(worldAabbMax);
 
-		Vector3f aabbSize = Stack.alloc(Vector3f.class);
+		Vector3f aabbSize = new Vector3f();
 		aabbSize.sub(this.worldAabbMax, this.worldAabbMin);
 
 		int maxInt = this.handleSentinel;
@@ -95,7 +98,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 		// allocate handles buffer and put all handles on free list
 		pHandles = new Handle[maxHandles];
-		for (int i=0; i<maxHandles; i++) {
+		for (int i = 0; i < maxHandles; i++) {
 			pHandles[i] = createHandle();
 		}
 		this.maxHandles = maxHandles;
@@ -103,20 +106,16 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 		// handle 0 is reserved as the null index, and is also used as the sentinel
 		firstFreeHandle = 1;
-		{
-			for (int i=firstFreeHandle; i<maxHandles; i++) {
-				pHandles[i].setNextFree(i+1);
-			}
-			pHandles[maxHandles - 1].setNextFree(0);
+		for (int i = firstFreeHandle; i < maxHandles; i++) {
+			pHandles[i].setNextFree(i + 1);
 		}
+		pHandles[maxHandles - 1].setNextFree(0);
 
-		{
-			// allocate edge buffers
-			for (int i=0; i<3; i++) {
-				pEdges[i] = createEdgeArray(maxHandles*2);
-			}
+		// allocate edge buffers
+		for (int i = 0; i < 3; i++) {
+			pEdges[i] = createEdgeArray(maxHandles * 2);
 		}
-		//removed overlap management
+		// removed overlap management
 
 		// make boundary sentinels
 
@@ -130,11 +129,11 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pEdges[axis].setHandle(0, 0);
 			pEdges[axis].setPos(1, handleSentinel);
 			pEdges[axis].setHandle(1, 0);
-			//#ifdef DEBUG_BROADPHASE
-			//debugPrintAxis(axis);
-			//#endif //DEBUG_BROADPHASE
+			// #ifdef DEBUG_BROADPHASE
+			// debugPrintAxis(axis);
+			// #endif //DEBUG_BROADPHASE
 		}
-		
+
 		// JAVA NOTE: added
 		mask = getMask();
 	}
@@ -149,7 +148,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 		return handle;
 	}
-	
+
 	protected void freeHandle(int handle) {
 		assert (handle > 0 && handle < maxHandles);
 
@@ -158,51 +157,50 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 		numHandles--;
 	}
-	
+
 	protected boolean testOverlap(int ignoreAxis, Handle pHandleA, Handle pHandleB) {
 		// optimization 1: check the array index (memory address), instead of the m_pos
 
-		for (int axis=0; axis<3; axis++) {
+		for (int axis = 0; axis < 3; axis++) {
 			if (axis != ignoreAxis) {
-				if (pHandleA.getMaxEdges(axis) < pHandleB.getMinEdges(axis) ||
-						pHandleB.getMaxEdges(axis) < pHandleA.getMinEdges(axis)) {
+				if (pHandleA.getMaxEdges(axis) < pHandleB.getMinEdges(axis)
+						|| pHandleB.getMaxEdges(axis) < pHandleA.getMinEdges(axis)) {
 					return false;
 				}
 			}
 		}
 
-		//optimization 2: only 2 axis need to be tested (conflicts with 'delayed removal' optimization)
+		// optimization 2: only 2 axis need to be tested (conflicts with 'delayed
+		// removal' optimization)
 
-		/*for (int axis = 0; axis < 3; axis++)
-		{
-		if (m_pEdges[axis][pHandleA->m_maxEdges[axis]].m_pos < m_pEdges[axis][pHandleB->m_minEdges[axis]].m_pos ||
-		m_pEdges[axis][pHandleB->m_maxEdges[axis]].m_pos < m_pEdges[axis][pHandleA->m_minEdges[axis]].m_pos)
-		{
-		return false;
-		}
-		}
-		*/
+		/*
+		 * for (int axis = 0; axis < 3; axis++) { if
+		 * (m_pEdges[axis][pHandleA->m_maxEdges[axis]].m_pos <
+		 * m_pEdges[axis][pHandleB->m_minEdges[axis]].m_pos ||
+		 * m_pEdges[axis][pHandleB->m_maxEdges[axis]].m_pos <
+		 * m_pEdges[axis][pHandleA->m_minEdges[axis]].m_pos) { return false; } }
+		 */
 
 		return true;
 	}
-	
-	//#ifdef DEBUG_BROADPHASE
-	//void debugPrintAxis(int axis,bool checkCardinality=true);
-	//#endif //DEBUG_BROADPHASE
+
+	// #ifdef DEBUG_BROADPHASE
+	// void debugPrintAxis(int axis,bool checkCardinality=true);
+	// #endif //DEBUG_BROADPHASE
 
 	protected void quantize(int[] out, Vector3f point, int isMax) {
-		Vector3f clampedPoint = Stack.alloc(point);
+		Vector3f clampedPoint = new Vector3f(point);
 
 		VectorUtil.setMax(clampedPoint, worldAabbMin);
 		VectorUtil.setMin(clampedPoint, worldAabbMax);
 
-		Vector3f v = Stack.alloc(Vector3f.class);
+		Vector3f v = new Vector3f();
 		v.sub(clampedPoint, worldAabbMin);
 		VectorUtil.mul(v, v, quantize);
 
-		out[0] = (((int)v.x & bpHandleMask) | isMax) & mask;
-		out[1] = (((int)v.y & bpHandleMask) | isMax) & mask;
-		out[2] = (((int)v.z & bpHandleMask) | isMax) & mask;
+		out[0] = (((int) v.x & bpHandleMask) | isMax) & mask;
+		out[1] = (((int) v.y & bpHandleMask) | isMax) & mask;
+		out[2] = (((int) v.z & bpHandleMask) | isMax) & mask;
 	}
 
 	// sorting a min edge downwards can only ever *add* overlaps
@@ -217,19 +215,19 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			Handle pHandlePrev = getHandle(edgeArray.getHandle(pPrev_idx));
 
 			if (edgeArray.isMax(pPrev_idx) != 0) {
-				// if previous edge is a maximum check the bounds and add an overlap if necessary
+				// if previous edge is a maximum check the bounds and add an overlap if
+				// necessary
 				if (updateOverlaps && testOverlap(axis, pHandleEdge, pHandlePrev)) {
 					pairCache.addOverlappingPair(pHandleEdge, pHandlePrev);
 					if (userPairCallback != null) {
 						userPairCallback.addOverlappingPair(pHandleEdge, pHandlePrev);
-						//AddOverlap(pEdge->m_handle, pPrev->m_handle);
+						// AddOverlap(pEdge->m_handle, pPrev->m_handle);
 					}
 				}
 
 				// update edge reference in other handle
 				pHandlePrev.incMaxEdges(axis);
-			}
-			else {
+			} else {
 				pHandlePrev.incMinEdges(axis);
 			}
 			pHandleEdge.decMinEdges(axis);
@@ -242,11 +240,11 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pPrev_idx--;
 		}
 
-		//#ifdef DEBUG_BROADPHASE
-		//debugPrintAxis(axis);
-		//#endif //DEBUG_BROADPHASE
+		// #ifdef DEBUG_BROADPHASE
+		// debugPrintAxis(axis);
+		// #endif //DEBUG_BROADPHASE
 	}
-	
+
 	// sorting a min edge upwards can only ever *remove* overlaps
 	protected void sortMinUp(int axis, int edge, Dispatcher dispatcher, boolean updateOverlaps) {
 		EdgeArray edgeArray = pEdges[axis];
@@ -271,8 +269,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 				// update edge reference in other handle
 				pHandleNext.decMaxEdges(axis);
-			}
-			else {
+			} else {
 				pHandleNext.decMinEdges(axis);
 			}
 			pHandleEdge.incMinEdges(axis);
@@ -285,7 +282,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pNext_idx++;
 		}
 	}
-	
+
 	// sorting a max edge downwards can only ever *remove* overlaps
 	protected void sortMaxDown(int axis, int edge, Dispatcher dispatcher, boolean updateOverlaps) {
 		EdgeArray edgeArray = pEdges[axis];
@@ -310,8 +307,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 				// update edge reference in other handle
 				pHandlePrev.incMinEdges(axis);
-			}
-			else {
+			} else {
 				pHandlePrev.incMaxEdges(axis);
 			}
 			pHandleEdge.decMaxEdges(axis);
@@ -324,11 +320,11 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pPrev_idx--;
 		}
 
-		//#ifdef DEBUG_BROADPHASE
-		//debugPrintAxis(axis);
-		//#endif //DEBUG_BROADPHASE
+		// #ifdef DEBUG_BROADPHASE
+		// debugPrintAxis(axis);
+		// #endif //DEBUG_BROADPHASE
 	}
-	
+
 	// sorting a max edge upwards can only ever *add* overlaps
 	protected void sortMaxUp(int axis, int edge, Dispatcher dispatcher, boolean updateOverlaps) {
 		EdgeArray edgeArray = pEdges[axis];
@@ -352,8 +348,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 				// update edge reference in other handle
 				pHandleNext.decMinEdges(axis);
-			}
-			else {
+			} else {
 				pHandleNext.decMaxEdges(axis);
 			}
 			pHandleEdge.incMaxEdges(axis);
@@ -366,7 +361,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pNext_idx++;
 		}
 	}
-	
+
 	public int getNumHandles() {
 		return numHandles;
 	}
@@ -388,7 +383,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			previousPair.pProxy1 = null;
 			previousPair.algorithm = null;
 
-			for (i=0; i<overlappingPairArray.size(); i++) {
+			for (i = 0; i < overlappingPairArray.size(); i++) {
 				BroadphasePair pair = overlappingPairArray.getQuick(i);
 
 				boolean isDuplicate = (pair.equals(previousPair));
@@ -401,13 +396,11 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 					boolean hasOverlap = testAabbOverlap(pair.pProxy0, pair.pProxy1);
 
 					if (hasOverlap) {
-						needsRemoval = false;//callback->processOverlap(pair);
-					}
-					else {
+						needsRemoval = false;// callback->processOverlap(pair);
+					} else {
 						needsRemoval = true;
 					}
-				}
-				else {
+				} else {
 					// remove duplicate
 					needsRemoval = true;
 					// should have no algorithm
@@ -417,8 +410,8 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 				if (needsRemoval) {
 					pairCache.cleanOverlappingPair(pair, dispatcher);
 
-					//		m_overlappingPairArray.swap(i,m_overlappingPairArray.size()-1);
-					//		m_overlappingPairArray.pop_back();
+					// m_overlappingPairArray.swap(i,m_overlappingPairArray.size()-1);
+					// m_overlappingPairArray.pop_back();
 					pair.pProxy0 = null;
 					pair.pProxy1 = null;
 					invalidPair++;
@@ -427,22 +420,24 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 			}
 
-			// if you don't like to skip the invalid pairs in the array, execute following code:
-			//#define CLEAN_INVALID_PAIRS 1
-			//#ifdef CLEAN_INVALID_PAIRS
+			// if you don't like to skip the invalid pairs in the array, execute following
+			// code:
+			// #define CLEAN_INVALID_PAIRS 1
+			// #ifdef CLEAN_INVALID_PAIRS
 
 			// perform a sort, to sort 'invalid' pairs to the end
 			MiscUtil.quickSort(overlappingPairArray, BroadphasePair.broadphasePairSortPredicate);
 
 			MiscUtil.resize(overlappingPairArray, overlappingPairArray.size() - invalidPair, BroadphasePair.class);
 			invalidPair = 0;
-			//#endif//CLEAN_INVALID_PAIRS
+			// #endif//CLEAN_INVALID_PAIRS
 
-			//printf("overlappingPairArray.size()=%d\n",overlappingPairArray.size());
+			// printf("overlappingPairArray.size()=%d\n",overlappingPairArray.size());
 		}
 	}
-	
-	public int addHandle(Vector3f aabbMin, Vector3f aabbMax, Object pOwner, short collisionFilterGroup, short collisionFilterMask, Dispatcher dispatcher, Object multiSapProxy) {
+
+	public int addHandle(Vector3f aabbMin, Vector3f aabbMax, Object pOwner, short collisionFilterGroup,
+			short collisionFilterMask, Dispatcher dispatcher, Object multiSapProxy) {
 		// quantize the bounds
 		int[] min = new int[3], max = new int[3];
 		quantize(min, aabbMin, 0);
@@ -454,7 +449,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 		Handle pHandle = getHandle(handle);
 
 		pHandle.uniqueId = handle;
-		//pHandle->m_pOverlaps = 0;
+		// pHandle->m_pOverlaps = 0;
 		pHandle.clientObject = pOwner;
 		pHandle.collisionFilterGroup = collisionFilterGroup;
 		pHandle.collisionFilterMask = collisionFilterMask;
@@ -489,7 +484,7 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 		return handle;
 	}
-	
+
 	public void removeHandle(int handle, Dispatcher dispatcher) {
 		Handle pHandle = getHandle(handle);
 
@@ -525,15 +520,15 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			pEdges.setHandle(limit - 1, 0);
 			pEdges.setPos(limit - 1, handleSentinel);
 
-			//#ifdef DEBUG_BROADPHASE
-			//debugPrintAxis(axis,false);
-			//#endif //DEBUG_BROADPHASE
+			// #ifdef DEBUG_BROADPHASE
+			// debugPrintAxis(axis,false);
+			// #endif //DEBUG_BROADPHASE
 		}
 
 		// free the handle
 		freeHandle(handle);
 	}
-	
+
 	public void updateHandle(int handle, Vector3f aabbMin, Vector3f aabbMax, Dispatcher dispatcher) {
 		Handle pHandle = getHandle(handle);
 
@@ -566,30 +561,33 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 			if (dmax < 0) {
 				sortMaxDown(axis, emax, dispatcher, true);
 			}
-				
-			//#ifdef DEBUG_BROADPHASE
-			//debugPrintAxis(axis);
-			//#endif //DEBUG_BROADPHASE
+
+			// #ifdef DEBUG_BROADPHASE
+			// debugPrintAxis(axis);
+			// #endif //DEBUG_BROADPHASE
 		}
 	}
-	
+
 	public Handle getHandle(int index) {
 		return pHandles[index];
 	}
-	
-	//public void processAllOverlappingPairs(OverlapCallback callback) {
-	//}
-	
-	public BroadphaseProxy createProxy(Vector3f aabbMin, Vector3f aabbMax, BroadphaseNativeType shapeType, Object userPtr, short collisionFilterGroup, short collisionFilterMask, Dispatcher dispatcher, Object multiSapProxy) {
-		int handleId = addHandle(aabbMin, aabbMax, userPtr, collisionFilterGroup, collisionFilterMask, dispatcher, multiSapProxy);
+
+	// public void processAllOverlappingPairs(OverlapCallback callback) {
+	// }
+
+	public BroadphaseProxy createProxy(Vector3f aabbMin, Vector3f aabbMax, BroadphaseNativeType shapeType,
+			Object userPtr, short collisionFilterGroup, short collisionFilterMask, Dispatcher dispatcher,
+			Object multiSapProxy) {
+		int handleId = addHandle(aabbMin, aabbMax, userPtr, collisionFilterGroup, collisionFilterMask, dispatcher,
+				multiSapProxy);
 
 		Handle handle = getHandle(handleId);
 
 		return handle;
 	}
-	
+
 	public void destroyProxy(BroadphaseProxy proxy, Dispatcher dispatcher) {
-		Handle handle = (Handle)proxy;
+		Handle handle = (Handle) proxy;
 		removeHandle(handle.uniqueId, dispatcher);
 	}
 
@@ -597,16 +595,16 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 		Handle handle = (Handle) proxy;
 		updateHandle(handle.uniqueId, aabbMin, aabbMax, dispatcher);
 	}
-	
+
 	public boolean testAabbOverlap(BroadphaseProxy proxy0, BroadphaseProxy proxy1) {
-		Handle pHandleA = (Handle)proxy0;
-		Handle pHandleB = (Handle)proxy1;
+		Handle pHandleA = (Handle) proxy0;
+		Handle pHandleB = (Handle) proxy1;
 
 		// optimization 1: check the array index (memory address), instead of the m_pos
 
 		for (int axis = 0; axis < 3; axis++) {
-			if (pHandleA.getMaxEdges(axis) < pHandleB.getMinEdges(axis) ||
-					pHandleB.getMaxEdges(axis) < pHandleA.getMinEdges(axis)) {
+			if (pHandleA.getMaxEdges(axis) < pHandleB.getMinEdges(axis)
+					|| pHandleB.getMaxEdges(axis) < pHandleA.getMinEdges(axis)) {
 				return false;
 			}
 		}
@@ -620,12 +618,13 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 	public void setOverlappingPairUserCallback(OverlappingPairCallback pairCallback) {
 		userPairCallback = pairCallback;
 	}
-	
+
 	public OverlappingPairCallback getOverlappingPairUserCallback() {
 		return userPairCallback;
 	}
-	
-	// getAabb returns the axis aligned bounding box in the 'global' coordinate frame
+
+	// getAabb returns the axis aligned bounding box in the 'global' coordinate
+	// frame
 	// will add some transform later
 	public void getBroadphaseAabb(Vector3f aabbMin, Vector3f aabbMax) {
 		aabbMin.set(worldAabbMin);
@@ -634,64 +633,72 @@ public abstract class AxisSweep3Internal extends BroadphaseInterface {
 
 	public void printStats() {
 		/*
-		printf("btAxisSweep3.h\n");
-		printf("numHandles = %d, maxHandles = %d\n",m_numHandles,m_maxHandles);
-		printf("aabbMin=%f,%f,%f,aabbMax=%f,%f,%f\n",m_worldAabbMin.getX(),m_worldAabbMin.getY(),m_worldAabbMin.getZ(),
-		m_worldAabbMax.getX(),m_worldAabbMax.getY(),m_worldAabbMax.getZ());
-		*/
+		 * printf("btAxisSweep3.h\n");
+		 * printf("numHandles = %d, maxHandles = %d\n",m_numHandles,m_maxHandles);
+		 * printf("aabbMin=%f,%f,%f,aabbMax=%f,%f,%f\n",m_worldAabbMin.getX(),
+		 * m_worldAabbMin.getY(),m_worldAabbMin.getZ(),
+		 * m_worldAabbMax.getX(),m_worldAabbMax.getY(),m_worldAabbMax.getZ());
+		 */
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
-	
+
 	protected abstract EdgeArray createEdgeArray(int size);
+
 	protected abstract Handle createHandle();
+
 	protected abstract int getMask();
-	
+
 	protected static abstract class EdgeArray {
 		public abstract void swap(int idx1, int idx2);
+
 		public abstract void set(int dest, int src);
-		
+
 		public abstract int getPos(int index);
+
 		public abstract void setPos(int index, int value);
 
 		public abstract int getHandle(int index);
+
 		public abstract void setHandle(int index, int value);
-		
+
 		public int isMax(int offset) {
 			return (getPos(offset) & 1);
 		}
 	}
-	
+
 	protected static abstract class Handle extends BroadphaseProxy {
 		public abstract int getMinEdges(int edgeIndex);
+
 		public abstract void setMinEdges(int edgeIndex, int value);
-		
+
 		public abstract int getMaxEdges(int edgeIndex);
+
 		public abstract void setMaxEdges(int edgeIndex, int value);
 
 		public void incMinEdges(int edgeIndex) {
-			setMinEdges(edgeIndex, getMinEdges(edgeIndex)+1);
+			setMinEdges(edgeIndex, getMinEdges(edgeIndex) + 1);
 		}
 
 		public void incMaxEdges(int edgeIndex) {
-			setMaxEdges(edgeIndex, getMaxEdges(edgeIndex)+1);
+			setMaxEdges(edgeIndex, getMaxEdges(edgeIndex) + 1);
 		}
 
 		public void decMinEdges(int edgeIndex) {
-			setMinEdges(edgeIndex, getMinEdges(edgeIndex)-1);
+			setMinEdges(edgeIndex, getMinEdges(edgeIndex) - 1);
 		}
 
 		public void decMaxEdges(int edgeIndex) {
-			setMaxEdges(edgeIndex, getMaxEdges(edgeIndex)-1);
+			setMaxEdges(edgeIndex, getMaxEdges(edgeIndex) - 1);
 		}
-		
+
 		public void setNextFree(int next) {
 			setMinEdges(0, next);
 		}
-		
+
 		public int getNextFree() {
 			return getMinEdges(0);
 		}
 	}
-	
+
 }

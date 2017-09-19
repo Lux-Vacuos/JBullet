@@ -24,10 +24,6 @@
 package com.bulletphysics.collision.broadphase;
 
 import com.bulletphysics.collision.dispatch.CollisionAlgorithmCreateFunc;
-import com.bulletphysics.collision.dispatch.CollisionObject;
-import com.bulletphysics.collision.dispatch.ManifoldResult;
-import com.bulletphysics.collision.narrowphase.PersistentManifold;
-import com.bulletphysics.util.ObjectArrayList;
 
 /**
  * Collision algorithm for handling narrowphase or midphase collision detection
@@ -35,30 +31,24 @@ import com.bulletphysics.util.ObjectArrayList;
  * 
  * @author jezek2
  */
-public abstract class CollisionAlgorithm {
+public abstract class CollisionAlgorithm implements ICollisionAlgorithm {
 
-	//protected final BulletStack stack = BulletStack.get();
-	
+	// protected final BulletStack stack = BulletStack.get();
+
 	// JAVA NOTE: added
 	private CollisionAlgorithmCreateFunc createFunc;
-	
+
 	protected Dispatcher dispatcher;
 
+	@Override
 	public void init() {
 	}
 
+	@Override
 	public void init(CollisionAlgorithmConstructionInfo ci) {
 		dispatcher = ci.dispatcher1;
 	}
-	
-	public abstract void destroy();
 
-	public abstract void processCollision(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo, ManifoldResult resultOut);
-
-	public abstract float calculateTimeOfImpact(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo, ManifoldResult resultOut);
-	
-	public abstract void getAllContactManifolds(ObjectArrayList<PersistentManifold> manifoldArray);
-	
 	public final void internalSetCreateFunc(CollisionAlgorithmCreateFunc func) {
 		createFunc = func;
 	}
@@ -66,5 +56,5 @@ public abstract class CollisionAlgorithm {
 	public final CollisionAlgorithmCreateFunc internalGetCreateFunc() {
 		return createFunc;
 	}
-	
+
 }

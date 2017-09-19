@@ -23,11 +23,11 @@
 
 package com.bulletphysics.collision.shapes;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.broadphase.BroadphaseNativeType;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * MinkowskiSumShape is only for advanced users. This shape represents implicit
@@ -48,32 +48,36 @@ public class MinkowskiSumShape extends ConvexInternalShape {
 		this.transA.setIdentity();
 		this.transB.setIdentity();
 	}
-	
+
 	@Override
 	public Vector3f localGetSupportingVertexWithoutMargin(Vector3f vec, Vector3f out) {
-		Vector3f tmp = Stack.alloc(Vector3f.class);
-		Vector3f supVertexA = Stack.alloc(Vector3f.class);
-		Vector3f supVertexB = Stack.alloc(Vector3f.class);
+		Vector3f tmp = new Vector3f();
+		Vector3f supVertexA = new Vector3f();
+		Vector3f supVertexB = new Vector3f();
 
-		// btVector3 supVertexA = m_transA(m_shapeA->localGetSupportingVertexWithoutMargin(-vec*m_transA.getBasis()));
+		// btVector3 supVertexA =
+		// m_transA(m_shapeA->localGetSupportingVertexWithoutMargin(-vec*m_transA.getBasis()));
 		tmp.negate(vec);
 		MatrixUtil.transposeTransform(tmp, tmp, transA.basis);
 		shapeA.localGetSupportingVertexWithoutMargin(tmp, supVertexA);
 		transA.transform(supVertexA);
 
-		// btVector3 supVertexB = m_transB(m_shapeB->localGetSupportingVertexWithoutMargin(vec*m_transB.getBasis()));
+		// btVector3 supVertexB =
+		// m_transB(m_shapeB->localGetSupportingVertexWithoutMargin(vec*m_transB.getBasis()));
 		MatrixUtil.transposeTransform(tmp, vec, transB.basis);
 		shapeB.localGetSupportingVertexWithoutMargin(tmp, supVertexB);
 		transB.transform(supVertexB);
 
-		//return supVertexA - supVertexB;
+		// return supVertexA - supVertexB;
 		out.sub(supVertexA, supVertexB);
 		return out;
 	}
 
 	@Override
-	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut, int numVectors) {
-		//todo: could make recursive use of batching. probably this shape is not used frequently.
+	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut,
+			int numVectors) {
+		// todo: could make recursive use of batching. probably this shape is not used
+		// frequently.
 		for (int i = 0; i < numVectors; i++) {
 			localGetSupportingVertexWithoutMargin(vectors[i], supportVerticesOut[i]);
 		}
@@ -99,7 +103,7 @@ public class MinkowskiSumShape extends ConvexInternalShape {
 	public String getName() {
 		return "MinkowskiSum";
 	}
-	
+
 	@Override
 	public float getMargin() {
 		return shapeA.getMargin() + shapeB.getMargin();

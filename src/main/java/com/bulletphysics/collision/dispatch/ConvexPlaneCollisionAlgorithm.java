@@ -23,6 +23,8 @@
 
 package com.bulletphysics.collision.dispatch;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.broadphase.CollisionAlgorithm;
 import com.bulletphysics.collision.broadphase.CollisionAlgorithmConstructionInfo;
 import com.bulletphysics.collision.broadphase.DispatcherInfo;
@@ -32,8 +34,6 @@ import com.bulletphysics.collision.shapes.StaticPlaneShape;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.util.ObjectArrayList;
 import com.bulletphysics.util.ObjectPool;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * ConvexPlaneCollisionAlgorithm provides convex/plane collision detection.
@@ -45,8 +45,9 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 	private boolean ownManifold;
 	private PersistentManifold manifoldPtr;
 	private boolean isSwapped;
-	
-	public void init(PersistentManifold mf, CollisionAlgorithmConstructionInfo ci, CollisionObject col0, CollisionObject col1, boolean isSwapped) {
+
+	public void init(PersistentManifold mf, CollisionAlgorithmConstructionInfo ci, CollisionObject col0,
+			CollisionObject col1, boolean isSwapped) {
 		super.init(ci);
 		this.ownManifold = false;
 		this.manifoldPtr = mf;
@@ -60,7 +61,7 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 			ownManifold = true;
 		}
 	}
-	
+
 	@Override
 	public void destroy() {
 		if (ownManifold) {
@@ -70,14 +71,15 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 			manifoldPtr = null;
 		}
 	}
-	
+
 	@Override
-	public void processCollision(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo, ManifoldResult resultOut) {
+	public void processCollision(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo,
+			ManifoldResult resultOut) {
 		if (manifoldPtr == null) {
 			return;
 		}
-		
-		Transform tmpTrans = Stack.alloc(Transform.class);
+
+		Transform tmpTrans = new Transform();
 
 		CollisionObject convexObj = isSwapped ? body1 : body0;
 		CollisionObject planeObj = isSwapped ? body0 : body1;
@@ -86,43 +88,44 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 		StaticPlaneShape planeShape = (StaticPlaneShape) planeObj.getCollisionShape();
 
 		boolean hasCollision = false;
-		Vector3f planeNormal = planeShape.getPlaneNormal(Stack.alloc(Vector3f.class));
+		Vector3f planeNormal = planeShape.getPlaneNormal(new Vector3f());
 		float planeConstant = planeShape.getPlaneConstant();
 
-		Transform planeInConvex = Stack.alloc(Transform.class);
+		Transform planeInConvex = new Transform();
 		convexObj.getWorldTransform(planeInConvex);
 		planeInConvex.inverse();
 		planeInConvex.mul(planeObj.getWorldTransform(tmpTrans));
 
-		Transform convexInPlaneTrans = Stack.alloc(Transform.class);
+		Transform convexInPlaneTrans = new Transform();
 		convexInPlaneTrans.inverse(planeObj.getWorldTransform(tmpTrans));
 		convexInPlaneTrans.mul(convexObj.getWorldTransform(tmpTrans));
 
-		Vector3f tmp = Stack.alloc(Vector3f.class);
+		Vector3f tmp = new Vector3f();
 		tmp.negate(planeNormal);
 		planeInConvex.basis.transform(tmp);
 
-		Vector3f vtx = convexShape.localGetSupportingVertex(tmp, Stack.alloc(Vector3f.class));
-		Vector3f vtxInPlane = Stack.alloc(vtx);
+		Vector3f vtx = convexShape.localGetSupportingVertex(tmp, new Vector3f());
+		Vector3f vtxInPlane = new Vector3f(vtx);
 		convexInPlaneTrans.transform(vtxInPlane);
 
 		float distance = (planeNormal.dot(vtxInPlane) - planeConstant);
 
-		Vector3f vtxInPlaneProjected = Stack.alloc(Vector3f.class);
+		Vector3f vtxInPlaneProjected = new Vector3f();
 		tmp.scale(distance, planeNormal);
 		vtxInPlaneProjected.sub(vtxInPlane, tmp);
 
-		Vector3f vtxInPlaneWorld = Stack.alloc(vtxInPlaneProjected);
+		Vector3f vtxInPlaneWorld = new Vector3f(vtxInPlaneProjected);
 		planeObj.getWorldTransform(tmpTrans).transform(vtxInPlaneWorld);
 
 		hasCollision = distance < manifoldPtr.getContactBreakingThreshold();
 		resultOut.setPersistentManifold(manifoldPtr);
 		if (hasCollision) {
-			// report a contact. internally this will be kept persistent, and contact reduction is done
-			Vector3f normalOnSurfaceB = Stack.alloc(planeNormal);
+			// report a contact. internally this will be kept persistent, and contact
+			// reduction is done
+			Vector3f normalOnSurfaceB = new Vector3f(planeNormal);
 			planeObj.getWorldTransform(tmpTrans).basis.transform(normalOnSurfaceB);
 
-			Vector3f pOnB = Stack.alloc(vtxInPlaneWorld);
+			Vector3f pOnB = new Vector3f(vtxInPlaneWorld);
 			resultOut.addContactPoint(normalOnSurfaceB, pOnB, distance);
 		}
 		if (ownManifold) {
@@ -133,7 +136,8 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 	}
 
 	@Override
-	public float calculateTimeOfImpact(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo, ManifoldResult resultOut) {
+	public float calculateTimeOfImpact(CollisionObject body0, CollisionObject body1, DispatcherInfo dispatchInfo,
+			ManifoldResult resultOut) {
 		// not yet
 		return 1f;
 	}
@@ -146,17 +150,18 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 	}
 
 	////////////////////////////////////////////////////////////////////////////
-	
+
 	public static class CreateFunc extends CollisionAlgorithmCreateFunc {
-		private final ObjectPool<ConvexPlaneCollisionAlgorithm> pool = ObjectPool.get(ConvexPlaneCollisionAlgorithm.class);
+		private final ObjectPool<ConvexPlaneCollisionAlgorithm> pool = ObjectPool
+				.get(ConvexPlaneCollisionAlgorithm.class);
 
 		@Override
-		public CollisionAlgorithm createCollisionAlgorithm(CollisionAlgorithmConstructionInfo ci, CollisionObject body0, CollisionObject body1) {
+		public CollisionAlgorithm createCollisionAlgorithm(CollisionAlgorithmConstructionInfo ci, CollisionObject body0,
+				CollisionObject body1) {
 			ConvexPlaneCollisionAlgorithm algo = pool.get();
 			if (!swapped) {
 				algo.init(null, ci, body0, body1, false);
-			}
-			else {
+			} else {
 				algo.init(null, ci, body0, body1, true);
 			}
 			return algo;
@@ -164,8 +169,8 @@ public class ConvexPlaneCollisionAlgorithm extends CollisionAlgorithm {
 
 		@Override
 		public void releaseCollisionAlgorithm(CollisionAlgorithm algo) {
-			pool.release((ConvexPlaneCollisionAlgorithm)algo);
+			pool.release((ConvexPlaneCollisionAlgorithm) algo);
 		}
 	}
-	
+
 }

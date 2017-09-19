@@ -23,11 +23,11 @@
 
 package com.bulletphysics.dynamics.constraintsolver;
 
-import com.bulletphysics.BulletGlobals;
-import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
+
+import com.bulletphysics.BulletGlobals;
+import com.bulletphysics.linearmath.VectorUtil;
 
 //notes:
 // Another memory optimization would be to store m_1MinvJt in the remaining 3 w components
@@ -35,16 +35,16 @@ import javax.vecmath.Vector3f;
 // if you only are interested in angular part, just feed massInvA and massInvB zero
 
 /**
- * Jacobian entry is an abstraction that allows to describe constraints.
- * It can be used in combination with a constraint solver.
- * Can be used to relate the effect of an impulse to the constraint error.
+ * Jacobian entry is an abstraction that allows to describe constraints. It can
+ * be used in combination with a constraint solver. Can be used to relate the
+ * effect of an impulse to the constraint error.
  * 
  * @author jezek2
  */
 public class JacobianEntry {
-	
-	//protected final BulletStack stack = BulletStack.get();
-	
+
+	// protected final BulletStack stack = BulletStack.get();
+
 	public final Vector3f linearJointAxis = new Vector3f();
 	public final Vector3f aJ = new Vector3f();
 	public final Vector3f bJ = new Vector3f();
@@ -59,15 +59,8 @@ public class JacobianEntry {
 	/**
 	 * Constraint between two different rigidbodies.
 	 */
-	public void init(Matrix3f world2A,
-			Matrix3f world2B,
-			Vector3f rel_pos1, Vector3f rel_pos2,
-			Vector3f jointAxis,
-			Vector3f inertiaInvA,
-			float massInvA,
-			Vector3f inertiaInvB,
-			float massInvB)
-	{
+	public void init(Matrix3f world2A, Matrix3f world2B, Vector3f rel_pos1, Vector3f rel_pos2, Vector3f jointAxis,
+			Vector3f inertiaInvA, float massInvA, Vector3f inertiaInvB, float massInvB) {
 		linearJointAxis.set(jointAxis);
 
 		aJ.cross(rel_pos1, linearJointAxis);
@@ -88,12 +81,8 @@ public class JacobianEntry {
 	/**
 	 * Angular constraint between two different rigidbodies.
 	 */
-	public void init(Vector3f jointAxis,
-		Matrix3f world2A,
-		Matrix3f world2B,
-		Vector3f inertiaInvA,
-		Vector3f inertiaInvB)
-	{
+	public void init(Vector3f jointAxis, Matrix3f world2A, Matrix3f world2B, Vector3f inertiaInvA,
+			Vector3f inertiaInvB) {
 		linearJointAxis.set(0f, 0f, 0f);
 
 		aJ.set(jointAxis);
@@ -113,11 +102,7 @@ public class JacobianEntry {
 	/**
 	 * Angular constraint between two different rigidbodies.
 	 */
-	public void init(Vector3f axisInA,
-		Vector3f axisInB,
-		Vector3f inertiaInvA,
-		Vector3f inertiaInvB)
-	{
+	public void init(Vector3f axisInA, Vector3f axisInB, Vector3f inertiaInvA, Vector3f inertiaInvB) {
 		linearJointAxis.set(0f, 0f, 0f);
 		aJ.set(axisInA);
 
@@ -134,13 +119,8 @@ public class JacobianEntry {
 	/**
 	 * Constraint on one rigidbody.
 	 */
-	public void init(
-		Matrix3f world2A,
-		Vector3f rel_pos1, Vector3f rel_pos2,
-		Vector3f jointAxis,
-		Vector3f inertiaInvA, 
-		float massInvA)
-	{
+	public void init(Matrix3f world2A, Vector3f rel_pos1, Vector3f rel_pos2, Vector3f jointAxis, Vector3f inertiaInvA,
+			float massInvA) {
 		linearJointAxis.set(jointAxis);
 
 		aJ.cross(rel_pos1, jointAxis);
@@ -158,7 +138,9 @@ public class JacobianEntry {
 		assert (Adiag > 0f);
 	}
 
-	public float getDiagonal() { return Adiag; }
+	public float getDiagonal() {
+		return Adiag;
+	}
 
 	/**
 	 * For two constraints on the same rigidbody (for example vehicle friction).
@@ -171,40 +153,41 @@ public class JacobianEntry {
 	}
 
 	/**
-	 * For two constraints on sharing two same rigidbodies (for example two contact points between two rigidbodies).
+	 * For two constraints on sharing two same rigidbodies (for example two contact
+	 * points between two rigidbodies).
 	 */
 	public float getNonDiagonal(JacobianEntry jacB, float massInvA, float massInvB) {
 		JacobianEntry jacA = this;
 
-		Vector3f lin = Stack.alloc(Vector3f.class);
+		Vector3f lin = new Vector3f();
 		VectorUtil.mul(lin, jacA.linearJointAxis, jacB.linearJointAxis);
 
-		Vector3f ang0 = Stack.alloc(Vector3f.class);
+		Vector3f ang0 = new Vector3f();
 		VectorUtil.mul(ang0, jacA.m_0MinvJt, jacB.aJ);
 
-		Vector3f ang1 = Stack.alloc(Vector3f.class);
+		Vector3f ang1 = new Vector3f();
 		VectorUtil.mul(ang1, jacA.m_1MinvJt, jacB.bJ);
 
-		Vector3f lin0 = Stack.alloc(Vector3f.class);
+		Vector3f lin0 = new Vector3f();
 		lin0.scale(massInvA, lin);
 
-		Vector3f lin1 = Stack.alloc(Vector3f.class);
+		Vector3f lin1 = new Vector3f();
 		lin1.scale(massInvB, lin);
 
-		Vector3f sum = Stack.alloc(Vector3f.class);
+		Vector3f sum = new Vector3f();
 		VectorUtil.add(sum, ang0, ang1, lin0, lin1);
 
 		return sum.x + sum.y + sum.z;
 	}
 
 	public float getRelativeVelocity(Vector3f linvelA, Vector3f angvelA, Vector3f linvelB, Vector3f angvelB) {
-		Vector3f linrel = Stack.alloc(Vector3f.class);
+		Vector3f linrel = new Vector3f();
 		linrel.sub(linvelA, linvelB);
 
-		Vector3f angvela = Stack.alloc(Vector3f.class);
+		Vector3f angvela = new Vector3f();
 		VectorUtil.mul(angvela, angvelA, aJ);
 
-		Vector3f angvelb = Stack.alloc(Vector3f.class);
+		Vector3f angvelb = new Vector3f();
 		VectorUtil.mul(angvelb, angvelB, bJ);
 
 		VectorUtil.mul(linrel, linrel, linearJointAxis);
@@ -215,5 +198,5 @@ public class JacobianEntry {
 		float rel_vel2 = angvela.x + angvela.y + angvela.z;
 		return rel_vel2 + BulletGlobals.FLT_EPSILON;
 	}
-	
+
 }

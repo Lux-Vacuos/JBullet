@@ -23,12 +23,12 @@
 
 package com.bulletphysics.collision.shapes;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.BulletGlobals;
 import com.bulletphysics.collision.broadphase.BroadphaseNativeType;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * ConeShape implements a cone shape primitive, centered around the origin and
@@ -48,7 +48,7 @@ public class ConeShape extends ConvexInternalShape {
 		this.radius = radius;
 		this.height = height;
 		setConeUpIndex(1);
-		sinAngle = (radius / (float)Math.sqrt(this.radius * this.radius + this.height * this.height));
+		sinAngle = (radius / (float) Math.sqrt(this.radius * this.radius + this.height * this.height));
 	}
 
 	public float getRadius() {
@@ -67,11 +67,10 @@ public class ConeShape extends ConvexInternalShape {
 			VectorUtil.setCoord(out, coneIndices[1], halfHeight);
 			VectorUtil.setCoord(out, coneIndices[2], 0f);
 			return out;
-		}
-		else {
+		} else {
 			float v0 = VectorUtil.getCoord(v, coneIndices[0]);
 			float v2 = VectorUtil.getCoord(v, coneIndices[2]);
-			float s = (float)Math.sqrt(v0 * v0 + v2 * v2);
+			float s = (float) Math.sqrt(v0 * v0 + v2 * v2);
 			if (s > BulletGlobals.FLT_EPSILON) {
 				float d = radius / s;
 				VectorUtil.setCoord(out, coneIndices[0], VectorUtil.getCoord(v, coneIndices[0]) * d);
@@ -93,8 +92,9 @@ public class ConeShape extends ConvexInternalShape {
 	}
 
 	@Override
-	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut, int numVectors) {
-		for (int i=0; i<numVectors; i++) {
+	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut,
+			int numVectors) {
+		for (int i = 0; i < numVectors; i++) {
 			Vector3f vec = vectors[i];
 			coneLocalSupport(vec, supportVerticesOut[i]);
 		}
@@ -104,7 +104,7 @@ public class ConeShape extends ConvexInternalShape {
 	public Vector3f localGetSupportingVertex(Vector3f vec, Vector3f out) {
 		Vector3f supVertex = coneLocalSupport(vec, out);
 		if (getMargin() != 0f) {
-			Vector3f vecnorm = Stack.alloc(vec);
+			Vector3f vecnorm = new Vector3f(vec);
 			if (vecnorm.lengthSquared() < (BulletGlobals.FLT_EPSILON * BulletGlobals.FLT_EPSILON)) {
 				vecnorm.set(-1f, -1f, -1f);
 			}
@@ -121,12 +121,12 @@ public class ConeShape extends ConvexInternalShape {
 
 	@Override
 	public void calculateLocalInertia(float mass, Vector3f inertia) {
-		Transform identity = Stack.alloc(Transform.class);
+		Transform identity = new Transform();
 		identity.setIdentity();
-		Vector3f aabbMin = Stack.alloc(Vector3f.class), aabbMax = Stack.alloc(Vector3f.class);
+		Vector3f aabbMin = new Vector3f(), aabbMax = new Vector3f();
 		getAabb(identity, aabbMin, aabbMax);
 
-		Vector3f halfExtents = Stack.alloc(Vector3f.class);
+		Vector3f halfExtents = new Vector3f();
 		halfExtents.sub(aabbMax, aabbMin);
 		halfExtents.scale(0.5f);
 
@@ -143,9 +143,9 @@ public class ConeShape extends ConvexInternalShape {
 		inertia.set(y2 + z2, x2 + z2, x2 + y2);
 		inertia.scale(scaledmass);
 
-		//inertia.x() = scaledmass * (y2+z2);
-		//inertia.y() = scaledmass * (x2+z2);
-		//inertia.z() = scaledmass * (x2+y2);
+		// inertia.x() = scaledmass * (y2+z2);
+		// inertia.y() = scaledmass * (x2+z2);
+		// inertia.z() = scaledmass * (x2+y2);
 	}
 
 	@Override
@@ -156,31 +156,31 @@ public class ConeShape extends ConvexInternalShape {
 	// choose upAxis index
 	protected void setConeUpIndex(int upIndex) {
 		switch (upIndex) {
-			case 0:
-				coneIndices[0] = 1;
-				coneIndices[1] = 0;
-				coneIndices[2] = 2;
-				break;
+		case 0:
+			coneIndices[0] = 1;
+			coneIndices[1] = 0;
+			coneIndices[2] = 2;
+			break;
 
-			case 1:
-				coneIndices[0] = 0;
-				coneIndices[1] = 1;
-				coneIndices[2] = 2;
-				break;
+		case 1:
+			coneIndices[0] = 0;
+			coneIndices[1] = 1;
+			coneIndices[2] = 2;
+			break;
 
-			case 2:
-				coneIndices[0] = 0;
-				coneIndices[1] = 2;
-				coneIndices[2] = 1;
-				break;
+		case 2:
+			coneIndices[0] = 0;
+			coneIndices[1] = 2;
+			coneIndices[2] = 1;
+			break;
 
-			default:
-				assert (false);
+		default:
+			assert (false);
 		}
 	}
 
 	public int getConeUpIndex() {
 		return coneIndices[1];
 	}
-	
+
 }

@@ -23,10 +23,10 @@
 
 package com.bulletphysics.linearmath;
 
-import com.bulletphysics.util.ObjectArrayList;
-import cz.advel.stack.Stack;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
+
+import com.bulletphysics.util.ObjectArrayList;
 
 /**
  * GeometryUtil helper class provides a few methods to convert between plane
@@ -47,8 +47,9 @@ public class GeometryUtil {
 		}
 		return true;
 	}
-	
-	public static boolean areVerticesBehindPlane(Vector4f planeNormal, ObjectArrayList<Vector3f> vertices, float margin) {
+
+	public static boolean areVerticesBehindPlane(Vector4f planeNormal, ObjectArrayList<Vector3f> vertices,
+			float margin) {
 		int numvertices = vertices.size();
 		for (int i = 0; i < numvertices; i++) {
 			Vector3f N1 = vertices.getQuick(i);
@@ -59,7 +60,7 @@ public class GeometryUtil {
 		}
 		return true;
 	}
-	
+
 	private static boolean notExist(Vector4f planeEquation, ObjectArrayList<Vector4f> planeEquations) {
 		int numbrushes = planeEquations.size();
 		for (int i = 0; i < numbrushes; i++) {
@@ -71,10 +72,11 @@ public class GeometryUtil {
 		return true;
 	}
 
-	public static void getPlaneEquationsFromVertices(ObjectArrayList<Vector3f> vertices, ObjectArrayList<Vector4f> planeEquationsOut) {
-		Vector4f planeEquation = Stack.alloc(Vector4f.class);
-		Vector3f edge0 = Stack.alloc(Vector3f.class), edge1 = Stack.alloc(Vector3f.class);
-		Vector3f tmp = Stack.alloc(Vector3f.class);
+	public static void getPlaneEquationsFromVertices(ObjectArrayList<Vector3f> vertices,
+			ObjectArrayList<Vector4f> planeEquationsOut) {
+		Vector4f planeEquation = new Vector4f();
+		Vector3f edge0 = new Vector3f(), edge1 = new Vector3f();
+		Vector3f tmp = new Vector3f();
 
 		int numvertices = vertices.size();
 		// brute force:
@@ -113,12 +115,13 @@ public class GeometryUtil {
 			}
 		}
 	}
-	
-	public static void getVerticesFromPlaneEquations(ObjectArrayList<Vector4f> planeEquations, ObjectArrayList<Vector3f> verticesOut) {
-		Vector3f n2n3 = Stack.alloc(Vector3f.class);
-		Vector3f n3n1 = Stack.alloc(Vector3f.class);
-		Vector3f n1n2 = Stack.alloc(Vector3f.class);
-		Vector3f potentialVertex = Stack.alloc(Vector3f.class);
+
+	public static void getVerticesFromPlaneEquations(ObjectArrayList<Vector4f> planeEquations,
+			ObjectArrayList<Vector3f> verticesOut) {
+		Vector3f n2n3 = new Vector3f();
+		Vector3f n3n1 = new Vector3f();
+		Vector3f n1n2 = new Vector3f();
+		Vector3f potentialVertex = new Vector3f();
 
 		int numbrushes = planeEquations.size();
 		// brute force:
@@ -135,14 +138,13 @@ public class GeometryUtil {
 					VectorUtil.cross3(n3n1, N3, N1);
 					VectorUtil.cross3(n1n2, N1, N2);
 
-					if ((n2n3.lengthSquared() > 0.0001f) &&
-							(n3n1.lengthSquared() > 0.0001f) &&
-							(n1n2.lengthSquared() > 0.0001f)) {
+					if ((n2n3.lengthSquared() > 0.0001f) && (n3n1.lengthSquared() > 0.0001f)
+							&& (n1n2.lengthSquared() > 0.0001f)) {
 						// point P out of 3 plane equations:
 
-						// 	     d1 ( N2 * N3 ) + d2 ( N3 * N1 ) + d3 ( N1 * N2 )  
-						// P =  -------------------------------------------------------------------------  
-						//    N1 . ( N2 * N3 )  
+						// d1 ( N2 * N3 ) + d2 ( N3 * N1 ) + d3 ( N1 * N2 )
+						// P = -------------------------------------------------------------------------
+						// N1 . ( N2 * N3 )
 
 						float quotient = VectorUtil.dot3(N1, n2n3);
 						if (Math.abs(quotient) > 0.000001f) {
@@ -165,5 +167,5 @@ public class GeometryUtil {
 			}
 		}
 	}
-	
+
 }

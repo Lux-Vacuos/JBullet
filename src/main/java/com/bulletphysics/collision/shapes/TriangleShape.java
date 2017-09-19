@@ -23,11 +23,11 @@
 
 package com.bulletphysics.collision.shapes;
 
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.broadphase.BroadphaseNativeType;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.VectorUtil;
-import cz.advel.stack.Stack;
-import javax.vecmath.Vector3f;
 
 /**
  * Single triangle shape.
@@ -35,19 +35,19 @@ import javax.vecmath.Vector3f;
  * @author jezek2
  */
 public class TriangleShape extends PolyhedralConvexShape {
-	
-	public final Vector3f[] vertices1/*[3]*/ = new Vector3f[] { new Vector3f(), new Vector3f(), new Vector3f() };
+
+	public final Vector3f[] vertices1/* [3] */ = new Vector3f[] { new Vector3f(), new Vector3f(), new Vector3f() };
 
 	// JAVA NOTE: added
 	public TriangleShape() {
 	}
-	
+
 	public TriangleShape(Vector3f p0, Vector3f p1, Vector3f p2) {
 		vertices1[0].set(p0);
 		vertices1[1].set(p1);
 		vertices1[2].set(p2);
 	}
-	
+
 	// JAVA NOTE: added
 	public void init(Vector3f p0, Vector3f p1, Vector3f p2) {
 		vertices1[0].set(p0);
@@ -63,7 +63,7 @@ public class TriangleShape extends PolyhedralConvexShape {
 	public Vector3f getVertexPtr(int index) {
 		return vertices1[index];
 	}
-	
+
 	@Override
 	public void getVertex(int index, Vector3f vert) {
 		vert.set(vertices1[index]);
@@ -87,21 +87,22 @@ public class TriangleShape extends PolyhedralConvexShape {
 
 	@Override
 	public void getAabb(Transform t, Vector3f aabbMin, Vector3f aabbMax) {
-//		btAssert(0);
+		// btAssert(0);
 		getAabbSlow(t, aabbMin, aabbMax);
 	}
 
 	@Override
 	public Vector3f localGetSupportingVertexWithoutMargin(Vector3f dir, Vector3f out) {
-		Vector3f dots = Stack.alloc(Vector3f.class);
+		Vector3f dots = new Vector3f();
 		dots.set(dir.dot(vertices1[0]), dir.dot(vertices1[1]), dir.dot(vertices1[2]));
 		out.set(vertices1[VectorUtil.maxAxis(dots)]);
 		return out;
 	}
 
 	@Override
-	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut, int numVectors) {
-		Vector3f dots = Stack.alloc(Vector3f.class);
+	public void batchedUnitVectorGetSupportingVertexWithoutMargin(Vector3f[] vectors, Vector3f[] supportVerticesOut,
+			int numVectors) {
+		Vector3f dots = new Vector3f();
 
 		for (int i = 0; i < numVectors; i++) {
 			Vector3f dir = vectors[i];
@@ -112,7 +113,7 @@ public class TriangleShape extends PolyhedralConvexShape {
 
 	@Override
 	public void getPlane(Vector3f planeNormal, Vector3f planeSupport, int i) {
-		getPlaneEquation(i,planeNormal,planeSupport);
+		getPlaneEquation(i, planeNormal, planeSupport);
 	}
 
 	@Override
@@ -121,8 +122,8 @@ public class TriangleShape extends PolyhedralConvexShape {
 	}
 
 	public void calcNormal(Vector3f normal) {
-		Vector3f tmp1 = Stack.alloc(Vector3f.class);
-		Vector3f tmp2 = Stack.alloc(Vector3f.class);
+		Vector3f tmp1 = new Vector3f();
+		Vector3f tmp2 = new Vector3f();
 
 		tmp1.sub(vertices1[1], vertices1[0]);
 		tmp2.sub(vertices1[2], vertices1[0]);
@@ -141,10 +142,10 @@ public class TriangleShape extends PolyhedralConvexShape {
 		assert (false);
 		inertia.set(0f, 0f, 0f);
 	}
-	
+
 	@Override
 	public boolean isInside(Vector3f pt, float tolerance) {
-		Vector3f normal = Stack.alloc(Vector3f.class);
+		Vector3f normal = new Vector3f();
 		calcNormal(normal);
 		// distance to plane
 		float dist = pt.dot(normal);
@@ -154,14 +155,14 @@ public class TriangleShape extends PolyhedralConvexShape {
 			// inside check on edge-planes
 			int i;
 			for (i = 0; i < 3; i++) {
-				Vector3f pa = Stack.alloc(Vector3f.class), pb = Stack.alloc(Vector3f.class);
+				Vector3f pa = new Vector3f(), pb = new Vector3f();
 				getEdge(i, pa, pb);
-				Vector3f edge = Stack.alloc(Vector3f.class);
+				Vector3f edge = new Vector3f();
 				edge.sub(pb, pa);
-				Vector3f edgeNormal = Stack.alloc(Vector3f.class);
+				Vector3f edgeNormal = new Vector3f();
 				edgeNormal.cross(edge, normal);
 				edgeNormal.normalize();
-				/*float*/ dist = pt.dot(edgeNormal);
+				/* float */ dist = pt.dot(edgeNormal);
 				float edgeConst = pa.dot(edgeNormal);
 				dist -= edgeConst;
 				if (dist < -tolerance) {

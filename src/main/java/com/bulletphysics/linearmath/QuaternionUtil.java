@@ -23,10 +23,10 @@
 
 package com.bulletphysics.linearmath;
 
-import com.bulletphysics.BulletGlobals;
-import cz.advel.stack.Stack;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
+
+import com.bulletphysics.BulletGlobals;
 
 /**
  * Utility functions for quaternions.
@@ -39,17 +39,17 @@ public class QuaternionUtil {
 		float s = 2f * (float) Math.acos(q.w);
 		return s;
 	}
-	
+
 	public static void setRotation(Quat4f q, Vector3f axis, float angle) {
 		float d = axis.length();
 		assert (d != 0f);
-		float s = (float)Math.sin(angle * 0.5f) / d;
+		float s = (float) Math.sin(angle * 0.5f) / d;
 		q.set(axis.x * s, axis.y * s, axis.z * s, (float) Math.cos(angle * 0.5f));
 	}
-	
+
 	// Game Programming Gems 2.10. make sure v0,v1 are normalized
 	public static Quat4f shortestArcQuat(Vector3f v0, Vector3f v1, Quat4f out) {
-		Vector3f c = Stack.alloc(Vector3f.class);
+		Vector3f c = new Vector3f();
 		c.cross(v0, v1);
 		float d = v0.dot(v1);
 
@@ -65,7 +65,7 @@ public class QuaternionUtil {
 		out.set(c.x * rs, c.y * rs, c.z * rs, s * 0.5f);
 		return out;
 	}
-	
+
 	public static void mul(Quat4f q, Vector3f w) {
 		float rx = q.w * w.x + q.y * w.z - q.z * w.y;
 		float ry = q.w * w.y + q.z * w.x - q.x * w.z;
@@ -73,25 +73,25 @@ public class QuaternionUtil {
 		float rw = -q.x * w.x - q.y * w.y - q.z * w.z;
 		q.set(rx, ry, rz, rw);
 	}
-	
+
 	public static Vector3f quatRotate(Quat4f rotation, Vector3f v, Vector3f out) {
-		Quat4f q = Stack.alloc(rotation);
+		Quat4f q = new Quat4f(rotation);
 		QuaternionUtil.mul(q, v);
 
-		Quat4f tmp = Stack.alloc(Quat4f.class);
+		Quat4f tmp = new Quat4f();
 		inverse(tmp, rotation);
 		q.mul(tmp);
-		
+
 		out.set(q.x, q.y, q.z);
 		return out;
 	}
-	
+
 	public static void inverse(Quat4f q) {
 		q.x = -q.x;
 		q.y = -q.y;
 		q.z = -q.z;
 	}
-	
+
 	public static void inverse(Quat4f q, Quat4f src) {
 		q.x = -src.x;
 		q.y = -src.y;
@@ -103,12 +103,12 @@ public class QuaternionUtil {
 		float halfYaw = yaw * 0.5f;
 		float halfPitch = pitch * 0.5f;
 		float halfRoll = roll * 0.5f;
-		float cosYaw = (float)Math.cos(halfYaw);
-		float sinYaw = (float)Math.sin(halfYaw);
-		float cosPitch = (float)Math.cos(halfPitch);
-		float sinPitch = (float)Math.sin(halfPitch);
-		float cosRoll = (float)Math.cos(halfRoll);
-		float sinRoll = (float)Math.sin(halfRoll);
+		float cosYaw = (float) Math.cos(halfYaw);
+		float sinYaw = (float) Math.sin(halfYaw);
+		float cosPitch = (float) Math.cos(halfPitch);
+		float sinPitch = (float) Math.sin(halfPitch);
+		float cosRoll = (float) Math.cos(halfRoll);
+		float sinRoll = (float) Math.sin(halfRoll);
 		q.x = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
 		q.y = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
 		q.z = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;
