@@ -60,33 +60,30 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	protected void predictUnconstraintMotion(float timeStep) {
 		Transform tmpTrans = new Transform();
 
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
-				if (!body.isStaticObject()) {
+			if (body != null)
+				if (!body.isStaticObject())
 					if (body.isActive()) {
 						body.applyGravity();
 						body.integrateVelocities(timeStep);
 						body.applyDamping(timeStep);
 						body.predictIntegratedTransform(timeStep, body.getInterpolationWorldTransform(tmpTrans));
 					}
-				}
-			}
+
 		}
 	}
 
 	protected void integrateTransforms(float timeStep) {
 		Transform predictedTrans = new Transform();
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				if (body.isActive() && (!body.isStaticObject())) {
 					body.predictIntegratedTransform(timeStep, predictedTrans);
 					body.proceedToTransform(predictedTrans);
 				}
-			}
+
 		}
 	}
 
@@ -136,25 +133,22 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 	@Override
 	public void clearForces() {
 		// todo: iterate over awake simulation islands!
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				body.clearForces();
-			}
 		}
 	}
 
 	@Override
 	public void setGravity(Vector3f gravity) {
 		this.gravity.set(gravity);
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				body.setGravity(gravity);
-			}
+
 		}
 	}
 
@@ -184,16 +178,15 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 		Transform predictedTrans = new Transform();
 		Vector3f minAabb = new Vector3f(), maxAabb = new Vector3f();
 
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				if (body.isActive() && (!body.isStaticObject())) {
 					colObj.getCollisionShape().getAabb(colObj.getWorldTransform(tmpTrans), minAabb, maxAabb);
 					BroadphaseInterface bp = getBroadphase();
 					bp.setAabb(body.getBroadphaseHandle(), minAabb, maxAabb, dispatcher1);
 				}
-			}
+
 		}
 	}
 
@@ -201,14 +194,12 @@ public class SimpleDynamicsWorld extends DynamicsWorld {
 		Transform tmpTrans = new Transform();
 
 		// todo: iterate over awake simulation islands!
-		for (int i = 0; i < collisionObjects.size(); i++) {
-			CollisionObject colObj = collisionObjects.getQuick(i);
+		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null && body.getMotionState() != null) {
-				if (body.getActivationState() != CollisionObject.ISLAND_SLEEPING) {
+			if (body != null && body.getMotionState() != null)
+				if (body.getActivationState() != CollisionObject.ISLAND_SLEEPING)
 					body.getMotionState().setWorldTransform(body.getWorldTransform(tmpTrans));
-				}
-			}
+
 		}
 	}
 

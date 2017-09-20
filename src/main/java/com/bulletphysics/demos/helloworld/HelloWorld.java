@@ -162,7 +162,7 @@ public class HelloWorld
 			// print positions of all objects
 			for (int j=dynamicsWorld.getNumCollisionObjects()-1; j>=0; j--)
 			{
-				CollisionObject obj = dynamicsWorld.getCollisionObjectArray().getQuick(j);
+				CollisionObject obj = dynamicsWorld.getCollisionObjectArray().get(j);
 				RigidBody body = RigidBody.upcast(obj);
 				if (body != null && body.getMotionState() != null) {
 					Transform trans = new Transform();

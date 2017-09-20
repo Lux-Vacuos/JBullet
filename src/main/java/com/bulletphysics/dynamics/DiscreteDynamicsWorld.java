@@ -24,6 +24,7 @@
 package com.bulletphysics.dynamics;
 
 import java.util.Comparator;
+import java.util.List;
 
 import javax.vecmath.Vector3f;
 
@@ -56,6 +57,7 @@ import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.ScalarUtil;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.TransformUtil;
+import com.bulletphysics.util.GlueList;
 import com.bulletphysics.util.ObjectArrayList;
 
 /**
@@ -67,7 +69,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 
 	protected ConstraintSolver constraintSolver;
 	protected SimulationIslandManager islandManager;
-	protected final ObjectArrayList<TypedConstraint> constraints = new ObjectArrayList<TypedConstraint>();
+	protected final List<TypedConstraint> constraints = new GlueList<>();
 	protected final Vector3f gravity = new Vector3f(0f, -10f, 0f);
 
 	// for variable timesteps
@@ -77,9 +79,9 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	protected boolean ownsIslandManager;
 	protected boolean ownsConstraintSolver;
 
-	protected ObjectArrayList<RaycastVehicle> vehicles = new ObjectArrayList<RaycastVehicle>();
+	protected List<RaycastVehicle> vehicles = new GlueList<>();
 
-	protected ObjectArrayList<ActionInterface> actions = new ObjectArrayList<ActionInterface>();
+	protected List<ActionInterface> actions = new GlueList<>();
 
 	protected int profileTimings = 0;
 
@@ -91,13 +93,10 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 		if (this.constraintSolver == null) {
 			this.constraintSolver = new SequentialImpulseConstraintSolver();
 			ownsConstraintSolver = true;
-		} else {
+		} else
 			ownsConstraintSolver = false;
-		}
 
-		{
-			islandManager = new SimulationIslandManager();
-		}
+		islandManager = new SimulationIslandManager();
 
 		ownsIslandManager = true;
 	}
@@ -105,15 +104,12 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	protected void saveKinematicState(float timeStep) {
 		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				// Transform predictedTrans = new Transform();
-				if (body.getActivationState() != CollisionObject.ISLAND_SLEEPING) {
-					if (body.isKinematicObject()) {
+				if (body.getActivationState() != CollisionObject.ISLAND_SLEEPING)
+					if (body.isKinematicObject())
 						// to calculate velocities next frame
 						body.saveKinematicState(timeStep);
-					}
-				}
-			}
 		}
 	}
 
@@ -141,7 +137,6 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 
 		if (getDebugDrawer() != null && (getDebugDrawer().getDebugMode()
 				& (DebugDrawModes.DRAW_WIREFRAME | DebugDrawModes.DRAW_AABB)) != 0) {
-			int i;
 
 			Transform tmpTrans = new Transform();
 			Vector3f minAabb = new Vector3f();
@@ -212,9 +207,8 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 			}
 
 			if (getDebugDrawer() != null && getDebugDrawer().getDebugMode() != 0) {
-				for (i = 0; i < actions.size(); i++) {
-					actions.getQuick(i).debugDraw(debugDrawer);
-				}
+				for (ActionInterface act : actions)
+					act.debugDraw(debugDrawer);
 			}
 		}
 	}
@@ -223,11 +217,9 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	public void clearForces() {
 		// todo: iterate over awake simulation islands!
 		for (CollisionObject colObj : collisionObjects) {
-
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				body.clearForces();
-			}
 		}
 	}
 
@@ -237,11 +229,9 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	public void applyGravity() {
 		// todo: iterate over awake simulation islands!
 		for (CollisionObject colObj : collisionObjects) {
-
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null && body.isActive()) {
+			if (body != null && body.isActive())
 				body.applyGravity();
-			}
 		}
 	}
 
@@ -254,28 +244,24 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 
 		// todo: iterate over awake simulation islands!
 		for (CollisionObject colObj : collisionObjects) {
-
 			RigidBody body = RigidBody.upcast(colObj);
 			if (body != null && body.getMotionState() != null && !body.isStaticOrKinematicObject()) {
 				// we need to call the update at least once, even for sleeping objects
 				// otherwise the 'graphics' transform never updates properly
 				// so todo: add 'dirty' flag
 				// if (body->getActivationState() != ISLAND_SLEEPING)
-				{
-					TransformUtil.integrateTransform(body.getInterpolationWorldTransform(tmpTrans),
-							body.getInterpolationLinearVelocity(tmpLinVel),
-							body.getInterpolationAngularVelocity(tmpAngVel), localTime * body.getHitFraction(),
-							interpolatedTransform);
-					body.getMotionState().setWorldTransform(interpolatedTransform);
-				}
+				TransformUtil.integrateTransform(body.getInterpolationWorldTransform(tmpTrans),
+						body.getInterpolationLinearVelocity(tmpLinVel), body.getInterpolationAngularVelocity(tmpAngVel),
+						localTime * body.getHitFraction(), interpolatedTransform);
+				body.getMotionState().setWorldTransform(interpolatedTransform);
 			}
 		}
 
 		if (getDebugDrawer() != null && (getDebugDrawer().getDebugMode() & DebugDrawModes.DRAW_WIREFRAME) != 0) {
-			for (int i = 0; i < vehicles.size(); i++) {
-				for (int v = 0; v < vehicles.getQuick(i).getNumWheels(); v++) {
+			for (RaycastVehicle vehicle : vehicles) {
+				for (int v = 0; v < vehicle.getNumWheels(); v++) {
 					// synchronize the wheels with the (interpolated) chassis worldtransform
-					vehicles.getQuick(i).updateWheelTransform(v, true);
+					vehicle.updateWheelTransform(v, true);
 				}
 			}
 		}
@@ -396,9 +382,8 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 		this.gravity.set(gravity);
 		for (CollisionObject colObj : collisionObjects) {
 			RigidBody body = RigidBody.upcast(colObj);
-			if (body != null) {
+			if (body != null)
 				body.setGravity(gravity);
-			}
 		}
 	}
 
@@ -415,9 +400,8 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 
 	@Override
 	public void addRigidBody(RigidBody body) {
-		if (!body.isStaticOrKinematicObject()) {
+		if (!body.isStaticOrKinematicObject())
 			body.setGravity(gravity);
-		}
 
 		if (body.getCollisionShape() != null) {
 			boolean isDynamic = !(body.isStaticObject() || body.isKinematicObject());
@@ -431,13 +415,12 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	}
 
 	public void addRigidBody(RigidBody body, short group, short mask) {
-		if (!body.isStaticOrKinematicObject()) {
+		if (!body.isStaticOrKinematicObject())
 			body.setGravity(gravity);
-		}
 
-		if (body.getCollisionShape() != null) {
+		if (body.getCollisionShape() != null)
 			addCollisionObject(body, group, mask);
-		}
+
 	}
 
 	public void updateActions(float timeStep) {
@@ -472,24 +455,20 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 				if (body != null) {
 					body.updateDeactivation(timeStep);
 
-					if (body.wantsSleeping()) {
-						if (body.isStaticOrKinematicObject()) {
+					if (body.wantsSleeping())
+						if (body.isStaticOrKinematicObject())
 							body.setActivationState(CollisionObject.ISLAND_SLEEPING);
-						} else {
-							if (body.getActivationState() == CollisionObject.ACTIVE_TAG) {
+						else {
+							if (body.getActivationState() == CollisionObject.ACTIVE_TAG)
 								body.setActivationState(CollisionObject.WANTS_DEACTIVATION);
-							}
 							if (body.getActivationState() == CollisionObject.ISLAND_SLEEPING) {
 								tmp.set(0f, 0f, 0f);
 								body.setAngularVelocity(tmp);
 								body.setLinearVelocity(tmp);
 							}
 						}
-					} else {
-						if (body.getActivationState() != CollisionObject.DISABLE_DEACTIVATION) {
-							body.setActivationState(CollisionObject.ACTIVE_TAG);
-						}
-					}
+					else if (body.getActivationState() != CollisionObject.DISABLE_DEACTIVATION)
+						body.setActivationState(CollisionObject.ACTIVE_TAG);
 				}
 			}
 		} finally {
@@ -611,9 +590,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 		try {
 			// sorted version of all btTypedConstraint, based on islandId
 			sortedConstraints.clear();
-			for (int i = 0; i < constraints.size(); i++) {
-				sortedConstraints.add(constraints.getQuick(i));
-			}
+			sortedConstraints.addAll(constraints);
 			// Collections.sort(sortedConstraints, sortConstraintOnIslandPredicate);
 			MiscUtil.quickSort(sortedConstraints, sortConstraintOnIslandPredicate);
 
@@ -641,23 +618,16 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 			getSimulationIslandManager().updateActivationState(getCollisionWorld(),
 					getCollisionWorld().getDispatcher());
 
-			{
-				int i;
-				int numConstraints = constraints.size();
-				for (i = 0; i < numConstraints; i++) {
-					TypedConstraint constraint = constraints.getQuick(i);
+			for (TypedConstraint constraint : constraints) {
+				RigidBody colObj0 = constraint.getRigidBodyA();
+				RigidBody colObj1 = constraint.getRigidBodyB();
 
-					RigidBody colObj0 = constraint.getRigidBodyA();
-					RigidBody colObj1 = constraint.getRigidBodyB();
+				if (((colObj0 != null) && (!colObj0.isStaticOrKinematicObject()))
+						&& ((colObj1 != null) && (!colObj1.isStaticOrKinematicObject())))
+					if (colObj0.isActive() || colObj1.isActive())
+						getSimulationIslandManager().getUnionFind().unite((colObj0).getIslandTag(),
+								(colObj1).getIslandTag());
 
-					if (((colObj0 != null) && (!colObj0.isStaticOrKinematicObject()))
-							&& ((colObj1 != null) && (!colObj1.isStaticOrKinematicObject()))) {
-						if (colObj0.isActive() || colObj1.isActive()) {
-							getSimulationIslandManager().getUnionFind().unite((colObj0).getIslandTag(),
-									(colObj1).getIslandTag());
-						}
-					}
-				}
 			}
 
 			// Store the island id in each body
@@ -1052,7 +1022,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 
 	@Override
 	public TypedConstraint getConstraint(int index) {
-		return constraints.getQuick(index);
+		return constraints.get(index);
 	}
 
 	// JAVA NOTE: not part of the original api
@@ -1064,7 +1034,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	// JAVA NOTE: not part of the original api
 	@Override
 	public ActionInterface getAction(int index) {
-		return actions.getQuick(index);
+		return actions.get(index);
 	}
 
 	public SimulationIslandManager getSimulationIslandManager() {
