@@ -26,12 +26,13 @@
 
 package com.bulletphysics.collision.broadphase;
 
+import java.util.List;
+
 import javax.vecmath.Vector3f;
 
 import com.bulletphysics.BulletStats;
 import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.VectorUtil;
-import com.bulletphysics.util.ObjectArrayList;
 
 /**
  * AxisSweep3Internal is an internal base class that implements sweep and prune.
@@ -368,7 +369,7 @@ public abstract class AxisSweep3Internal implements BroadphaseInterface {
 
 	public void calculateOverlappingPairs(Dispatcher dispatcher) {
 		if (pairCache.hasDeferredRemoval()) {
-			ObjectArrayList<BroadphasePair> overlappingPairArray = pairCache.getOverlappingPairArray();
+			List<BroadphasePair> overlappingPairArray = pairCache.getOverlappingPairArray();
 
 			// perform a sort, to find duplicates and to sort 'invalid' pairs to the end
 			MiscUtil.quickSort(overlappingPairArray, BroadphasePair.broadphasePairSortPredicate);
@@ -384,7 +385,7 @@ public abstract class AxisSweep3Internal implements BroadphaseInterface {
 			previousPair.algorithm = null;
 
 			for (i = 0; i < overlappingPairArray.size(); i++) {
-				BroadphasePair pair = overlappingPairArray.getQuick(i);
+				BroadphasePair pair = overlappingPairArray.get(i);
 
 				boolean isDuplicate = (pair.equals(previousPair));
 

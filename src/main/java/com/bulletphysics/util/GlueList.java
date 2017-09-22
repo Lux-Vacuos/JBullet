@@ -990,6 +990,18 @@ public class GlueList<T> extends AbstractList<T> implements List<T>, Cloneable, 
             last.add((T) s.readObject());
         }
     }
+    
+    /**
+     * Extra getters for JBullet
+     *  
+     */
+    public int getFirstCapacity() {
+		return first.elementData.length;
+	}
+    
+    public int getLastCapacity() {
+		return last.elementData.length;
+	}
 
     static class Node<T> {
 

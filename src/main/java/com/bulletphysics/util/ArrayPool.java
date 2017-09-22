@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +38,7 @@ import java.util.Map;
 public class ArrayPool<T> {
 
 	private Class componentType;
-	private ObjectArrayList list = new ObjectArrayList();
+	private List list = new GlueList();
 	private Comparator comparator;
 	private IntValue key = new IntValue();
 	

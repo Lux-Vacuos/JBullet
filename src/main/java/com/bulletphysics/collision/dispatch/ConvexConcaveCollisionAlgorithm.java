@@ -23,6 +23,8 @@
 
 package com.bulletphysics.collision.dispatch;
 
+import java.util.List;
+
 import javax.vecmath.Vector3f;
 
 import com.bulletphysics.collision.broadphase.CollisionAlgorithm;
@@ -38,7 +40,6 @@ import com.bulletphysics.collision.shapes.TriangleCallback;
 import com.bulletphysics.collision.shapes.TriangleShape;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.VectorUtil;
-import com.bulletphysics.util.ObjectArrayList;
 import com.bulletphysics.util.ObjectPool;
 
 /**
@@ -169,7 +170,7 @@ public class ConvexConcaveCollisionAlgorithm extends CollisionAlgorithm {
 	}
 
 	@Override
-	public void getAllContactManifolds(ObjectArrayList<PersistentManifold> manifoldArray) {
+	public void getAllContactManifolds(List<PersistentManifold> manifoldArray) {
 		if (btConvexTriangleCallback.manifoldPtr != null) {
 			manifoldArray.add(btConvexTriangleCallback.manifoldPtr);
 		}

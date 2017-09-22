@@ -23,21 +23,26 @@
 
 package com.bulletphysics.collision.shapes;
 
-import com.bulletphysics.util.ObjectArrayList;
 import java.nio.ByteBuffer;
+import java.util.List;
+
+import com.bulletphysics.util.GlueList;
 
 /**
- * TriangleIndexVertexArray allows to use multiple meshes, by indexing into existing
- * triangle/index arrays. Additional meshes can be added using {@link #addIndexedMesh addIndexedMesh}.<p>
+ * TriangleIndexVertexArray allows to use multiple meshes, by indexing into
+ * existing triangle/index arrays. Additional meshes can be added using
+ * {@link #addIndexedMesh addIndexedMesh}.
+ * <p>
  * 
- * No duplicate is made of the vertex/index data, it only indexes into external vertex/index
- * arrays. So keep those arrays around during the lifetime of this TriangleIndexVertexArray.
+ * No duplicate is made of the vertex/index data, it only indexes into external
+ * vertex/index arrays. So keep those arrays around during the lifetime of this
+ * TriangleIndexVertexArray.
  * 
  * @author jezek2
  */
 public class TriangleIndexVertexArray extends StridingMeshInterface {
 
-	protected ObjectArrayList<IndexedMesh> indexedMeshes = new ObjectArrayList<IndexedMesh>();
+	protected List<IndexedMesh> indexedMeshes = new GlueList<>();
 
 	private ByteBufferVertexData data = new ByteBufferVertexData();
 
@@ -47,7 +52,8 @@ public class TriangleIndexVertexArray extends StridingMeshInterface {
 	/**
 	 * Just to be backwards compatible.
 	 */
-	public TriangleIndexVertexArray(int numTriangles, ByteBuffer triangleIndexBase, int triangleIndexStride, int numVertices, ByteBuffer vertexBase, int vertexStride) {
+	public TriangleIndexVertexArray(int numTriangles, ByteBuffer triangleIndexBase, int triangleIndexStride,
+			int numVertices, ByteBuffer vertexBase, int vertexStride) {
 		IndexedMesh mesh = new IndexedMesh();
 
 		mesh.numTriangles = numTriangles;
@@ -66,28 +72,28 @@ public class TriangleIndexVertexArray extends StridingMeshInterface {
 
 	public void addIndexedMesh(IndexedMesh mesh, ScalarType indexType) {
 		indexedMeshes.add(mesh);
-		indexedMeshes.getQuick(indexedMeshes.size() - 1).indexType = indexType;
+		indexedMeshes.get(indexedMeshes.size() - 1).indexType = indexType;
 	}
-	
+
 	@Override
 	public VertexData getLockedVertexIndexBase(int subpart) {
 		assert (subpart < getNumSubParts());
 
-		IndexedMesh mesh = indexedMeshes.getQuick(subpart);
+		IndexedMesh mesh = indexedMeshes.get(subpart);
 
 		data.vertexCount = mesh.numVertices;
 		data.vertexData = mesh.vertexBase;
-		//#ifdef BT_USE_DOUBLE_PRECISION
-		//type = PHY_DOUBLE;
-		//#else
+		// #ifdef BT_USE_DOUBLE_PRECISION
+		// type = PHY_DOUBLE;
+		// #else
 		data.vertexType = ScalarType.FLOAT;
-		//#endif
+		// #endif
 		data.vertexStride = mesh.vertexStride;
 
-		data.indexCount = mesh.numTriangles*3;
+		data.indexCount = mesh.numTriangles * 3;
 
 		data.indexData = mesh.triangleIndexBase;
-		data.indexStride = mesh.triangleIndexStride/3;
+		data.indexStride = mesh.triangleIndexStride / 3;
 		data.indexType = mesh.indexType;
 		return data;
 	}
@@ -98,8 +104,9 @@ public class TriangleIndexVertexArray extends StridingMeshInterface {
 	}
 
 	/**
-	 * unLockVertexBase finishes the access to a subpart of the triangle mesh.
-	 * Make a call to unLockVertexBase when the read and write access (using getLockedVertexIndexBase) is finished.
+	 * unLockVertexBase finishes the access to a subpart of the triangle mesh. Make
+	 * a call to unLockVertexBase when the read and write access (using
+	 * getLockedVertexIndexBase) is finished.
 	 */
 	@Override
 	public void unLockVertexBase(int subpart) {
@@ -113,18 +120,18 @@ public class TriangleIndexVertexArray extends StridingMeshInterface {
 	}
 
 	/**
-	 * getNumSubParts returns the number of seperate subparts.
-	 * Each subpart has a continuous array of vertices and indices.
+	 * getNumSubParts returns the number of seperate subparts. Each subpart has a
+	 * continuous array of vertices and indices.
 	 */
 	@Override
 	public int getNumSubParts() {
 		return indexedMeshes.size();
 	}
 
-	public ObjectArrayList<IndexedMesh> getIndexedMeshArray() {
+	public List<IndexedMesh> getIndexedMeshArray() {
 		return indexedMeshes;
 	}
-	
+
 	@Override
 	public void preallocateVertices(int numverts) {
 	}

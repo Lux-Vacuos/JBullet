@@ -24,6 +24,7 @@
 package com.bulletphysics.util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,10 +33,10 @@ import java.util.Map;
  * @author jezek2
  */
 public class ObjectPool<T> {
-	
+
 	private Class<T> cls;
-	private ObjectArrayList<T> list = new ObjectArrayList<T>();
-	
+	private List<T> list = new GlueList<T>();
+
 	public ObjectPool(Class<T> cls) {
 		this.cls = cls;
 	}
@@ -43,15 +44,13 @@ public class ObjectPool<T> {
 	private T create() {
 		try {
 			return cls.newInstance();
-		}
-		catch (InstantiationException e) {
+		} catch (InstantiationException e) {
 			throw new IllegalStateException(e);
-		}
-		catch (IllegalAccessException e) {
+		} catch (IllegalAccessException e) {
 			throw new IllegalStateException(e);
 		}
 	}
-	
+
 	/**
 	 * Returns instance from pool, or create one if pool is empty.
 	 * 
@@ -60,46 +59,48 @@ public class ObjectPool<T> {
 	public T get() {
 		if (list.size() > 0) {
 			return list.remove(list.size() - 1);
-		}
-		else {
+		} else {
 			return create();
 		}
 	}
-	
+
 	/**
 	 * Release instance into pool.
 	 * 
-	 * @param obj previously obtained instance from pool
+	 * @param obj
+	 *            previously obtained instance from pool
 	 */
 	public void release(T obj) {
 		list.add(obj);
 	}
-	
+
 	////////////////////////////////////////////////////////////////////////////
-	
+
 	private static ThreadLocal<Map> threadLocal = new ThreadLocal<Map>() {
 		@Override
 		protected Map initialValue() {
 			return new HashMap();
 		}
 	};
-	
+
 	/**
-	 * Returns per-thread object pool for given type, or create one if it doesn't exist.
+	 * Returns per-thread object pool for given type, or create one if it doesn't
+	 * exist.
 	 * 
-	 * @param cls type
+	 * @param cls
+	 *            type
 	 * @return object pool
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> ObjectPool<T> get(Class<T> cls) {
 		Map map = threadLocal.get();
-		
-		ObjectPool<T> pool = (ObjectPool<T>)map.get(cls);
+
+		ObjectPool<T> pool = (ObjectPool<T>) map.get(cls);
 		if (pool == null) {
 			pool = new ObjectPool<T>(cls);
 			map.put(cls, pool);
 		}
-		
+
 		return pool;
 	}
 

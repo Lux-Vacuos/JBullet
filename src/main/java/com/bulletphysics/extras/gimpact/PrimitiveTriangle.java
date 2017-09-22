@@ -27,11 +27,13 @@
 
 package com.bulletphysics.extras.gimpact;
 
+import java.util.List;
+
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
 import com.bulletphysics.linearmath.Transform;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.util.GlueList;
 
 /**
  *
@@ -39,12 +41,9 @@ import com.bulletphysics.util.ObjectArrayList;
  */
 public class PrimitiveTriangle {
 
-	private final ObjectArrayList<Vector3f> tmpVecList1 = new ObjectArrayList<Vector3f>(
-			TriangleContact.MAX_TRI_CLIPPING);
-	private final ObjectArrayList<Vector3f> tmpVecList2 = new ObjectArrayList<Vector3f>(
-			TriangleContact.MAX_TRI_CLIPPING);
-	private final ObjectArrayList<Vector3f> tmpVecList3 = new ObjectArrayList<Vector3f>(
-			TriangleContact.MAX_TRI_CLIPPING);
+	private final List<Vector3f> tmpVecList1 = new GlueList<>(TriangleContact.MAX_TRI_CLIPPING);
+	private final List<Vector3f> tmpVecList2 = new GlueList<>(TriangleContact.MAX_TRI_CLIPPING);
+	private final List<Vector3f> tmpVecList3 = new GlueList<>(TriangleContact.MAX_TRI_CLIPPING);
 
 	{
 		for (int i = 0; i < TriangleContact.MAX_TRI_CLIPPING; i++) {
@@ -137,9 +136,9 @@ public class PrimitiveTriangle {
 	 *            plane calculated.
 	 * @return the number of clipped points
 	 */
-	public int clip_triangle(PrimitiveTriangle other, ObjectArrayList<Vector3f> clipped_points) {
+	public int clip_triangle(PrimitiveTriangle other, List<Vector3f> clipped_points) {
 		// edge 0
-		ObjectArrayList<Vector3f> temp_points = tmpVecList1;
+		List<Vector3f> temp_points = tmpVecList1;
 
 		Vector4f edgeplane = new Vector4f();
 
@@ -151,7 +150,7 @@ public class PrimitiveTriangle {
 		if (clipped_count == 0) {
 			return 0;
 		}
-		ObjectArrayList<Vector3f> temp_points1 = tmpVecList2;
+		List<Vector3f> temp_points1 = tmpVecList2;
 
 		// edge 1
 		get_edge_plane(1, edgeplane);
@@ -175,7 +174,7 @@ public class PrimitiveTriangle {
 	public boolean find_triangle_collision_clip_method(PrimitiveTriangle other, TriangleContact contacts) {
 		float margin = this.margin + other.margin;
 
-		ObjectArrayList<Vector3f> clipped_points = tmpVecList3;
+		List<Vector3f> clipped_points = tmpVecList3;
 
 		int clipped_count;
 		// create planes

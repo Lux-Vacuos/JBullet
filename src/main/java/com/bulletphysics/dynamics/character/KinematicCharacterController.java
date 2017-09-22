@@ -23,6 +23,8 @@
 
 package com.bulletphysics.dynamics.character;
 
+import java.util.List;
+
 import javax.vecmath.Vector3f;
 
 import com.bulletphysics.BulletGlobals;
@@ -37,7 +39,7 @@ import com.bulletphysics.collision.shapes.ConvexShape;
 import com.bulletphysics.dynamics.ActionInterface;
 import com.bulletphysics.linearmath.IDebugDraw;
 import com.bulletphysics.linearmath.Transform;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.util.GlueList;
 
 /**
  * KinematicCharacterController is an object that supports a sliding motion in a
@@ -93,7 +95,7 @@ public class KinematicCharacterController extends ActionInterface {
 	protected Vector3f targetPosition = new Vector3f();
 
 	// keep track of the contact manifolds
-	ObjectArrayList<PersistentManifold> manifoldArray = new ObjectArrayList<PersistentManifold>();
+	List<PersistentManifold> manifoldArray = new GlueList<>();
 
 	protected boolean touchingContact;
 	protected Vector3f touchingNormal = new Vector3f();
@@ -381,14 +383,14 @@ public class KinematicCharacterController extends ActionInterface {
 		for (int i = 0; i < ghostObject.getOverlappingPairCache().getNumOverlappingPairs(); i++) {
 			manifoldArray.clear();
 
-			BroadphasePair collisionPair = ghostObject.getOverlappingPairCache().getOverlappingPairArray().getQuick(i);
+			BroadphasePair collisionPair = ghostObject.getOverlappingPairCache().getOverlappingPairArray().get(i);
 
 			if (collisionPair.algorithm != null) {
 				collisionPair.algorithm.getAllContactManifolds(manifoldArray);
 			}
 
 			for (int j = 0; j < manifoldArray.size(); j++) {
-				PersistentManifold manifold = manifoldArray.getQuick(j);
+				PersistentManifold manifold = manifoldArray.get(j);
 				float directionSign = manifold.getBody0() == ghostObject ? -1.0f : 1.0f;
 				for (int p = 0; p < manifold.getNumContacts(); p++) {
 					ManifoldPoint pt = manifold.getContactPoint(p);

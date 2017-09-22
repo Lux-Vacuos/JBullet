@@ -24,13 +24,14 @@
 package com.bulletphysics.collision.shapes;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.vecmath.Vector3f;
 
 import com.bulletphysics.linearmath.AabbUtil2;
 import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.VectorUtil;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.util.GlueList;
 
 // JAVA NOTE: OptimizedBvh still from 2.66, update it for 2.70b1
 
@@ -61,8 +62,8 @@ public class OptimizedBvh implements Serializable {
 
 	////////////////////////////////////////////////////////////////////////////
 
-	private final ObjectArrayList<OptimizedBvhNode> leafNodes = new ObjectArrayList<OptimizedBvhNode>();
-	private final ObjectArrayList<OptimizedBvhNode> contiguousNodes = new ObjectArrayList<OptimizedBvhNode>();
+	private final List<OptimizedBvhNode> leafNodes = new GlueList<>();
+	private final List<OptimizedBvhNode> contiguousNodes = new GlueList<>();
 
 	private QuantizedBvhNodes quantizedLeafNodes = new QuantizedBvhNodes();
 	private QuantizedBvhNodes quantizedContiguousNodes = new QuantizedBvhNodes();
@@ -76,7 +77,7 @@ public class OptimizedBvh implements Serializable {
 	private final Vector3f bvhQuantization = new Vector3f();
 
 	protected TraversalMode traversalMode = TraversalMode.STACKLESS;
-	protected final ObjectArrayList<BvhSubtreeInfo> SubtreeHeaders = new ObjectArrayList<BvhSubtreeInfo>();
+	protected final List<BvhSubtreeInfo> SubtreeHeaders = new GlueList<>();
 	// This is only used for serialization so we don't have to add serialization
 	// directly to btAlignedObjectArray
 	protected int subtreeHeaderCount;
@@ -89,7 +90,7 @@ public class OptimizedBvh implements Serializable {
 		if (useQuantization) {
 			quantizedContiguousNodes.setQuantizedAabbMin(nodeIndex, quantizeWithClamp(aabbMin));
 		} else {
-			contiguousNodes.getQuick(nodeIndex).aabbMinOrg.set(aabbMin);
+			contiguousNodes.get(nodeIndex).aabbMinOrg.set(aabbMin);
 		}
 	}
 
@@ -97,7 +98,7 @@ public class OptimizedBvh implements Serializable {
 		if (useQuantization) {
 			quantizedContiguousNodes.setQuantizedAabbMax(nodeIndex, quantizeWithClamp(aabbMax));
 		} else {
-			contiguousNodes.getQuick(nodeIndex).aabbMaxOrg.set(aabbMax);
+			contiguousNodes.get(nodeIndex).aabbMaxOrg.set(aabbMax);
 		}
 	}
 
@@ -109,7 +110,7 @@ public class OptimizedBvh implements Serializable {
 		}
 
 		// non-quantized
-		return leafNodes.getQuick(nodeIndex).aabbMinOrg;
+		return leafNodes.get(nodeIndex).aabbMinOrg;
 	}
 
 	public Vector3f getAabbMax(int nodeIndex) {
@@ -120,7 +121,7 @@ public class OptimizedBvh implements Serializable {
 		}
 
 		// non-quantized
-		return leafNodes.getQuick(nodeIndex).aabbMaxOrg;
+		return leafNodes.get(nodeIndex).aabbMaxOrg;
 	}
 
 	public void setQuantizationValues(Vector3f aabbMin, Vector3f aabbMax) {
@@ -144,7 +145,7 @@ public class OptimizedBvh implements Serializable {
 		if (useQuantization) {
 			quantizedContiguousNodes.setEscapeIndexOrTriangleIndex(nodeIndex, -escapeIndex);
 		} else {
-			contiguousNodes.getQuick(nodeIndex).escapeIndex = escapeIndex;
+			contiguousNodes.get(nodeIndex).escapeIndex = escapeIndex;
 		}
 	}
 
@@ -170,8 +171,8 @@ public class OptimizedBvh implements Serializable {
 			}
 		} else {
 			// non-quantized
-			VectorUtil.setMin(contiguousNodes.getQuick(nodeIndex).aabbMinOrg, newAabbMin);
-			VectorUtil.setMax(contiguousNodes.getQuick(nodeIndex).aabbMaxOrg, newAabbMax);
+			VectorUtil.setMin(contiguousNodes.get(nodeIndex).aabbMinOrg, newAabbMin);
+			VectorUtil.setMax(contiguousNodes.get(nodeIndex).aabbMaxOrg, newAabbMax);
 		}
 	}
 
@@ -180,9 +181,9 @@ public class OptimizedBvh implements Serializable {
 			quantizedLeafNodes.swap(i, splitIndex);
 		} else {
 			// JAVA NOTE: changing reference instead of copy
-			OptimizedBvhNode tmp = leafNodes.getQuick(i);
-			leafNodes.setQuick(i, leafNodes.getQuick(splitIndex));
-			leafNodes.setQuick(splitIndex, tmp);
+			OptimizedBvhNode tmp = leafNodes.get(i);
+			leafNodes.set(i, leafNodes.get(splitIndex));
+			leafNodes.set(splitIndex, tmp);
 		}
 	}
 
@@ -190,14 +191,14 @@ public class OptimizedBvh implements Serializable {
 		if (useQuantization) {
 			quantizedContiguousNodes.set(internalNode, quantizedLeafNodes, leafNodeIndex);
 		} else {
-			contiguousNodes.getQuick(internalNode).set(leafNodes.getQuick(leafNodeIndex));
+			contiguousNodes.get(internalNode).set(leafNodes.get(leafNodeIndex));
 		}
 	}
 
 	private static class NodeTriangleCallback extends InternalTriangleIndexCallback {
-		public ObjectArrayList<OptimizedBvhNode> triangleNodes;
+		public List<OptimizedBvhNode> triangleNodes;
 
-		public NodeTriangleCallback(ObjectArrayList<OptimizedBvhNode> triangleNodes) {
+		public NodeTriangleCallback(List<OptimizedBvhNode> triangleNodes) {
 			this.triangleNodes = triangleNodes;
 		}
 
@@ -356,7 +357,7 @@ public class OptimizedBvh implements Serializable {
 
 			int i;
 			for (i = 0; i < SubtreeHeaders.size(); i++) {
-				BvhSubtreeInfo subtree = SubtreeHeaders.getQuick(i);
+				BvhSubtreeInfo subtree = SubtreeHeaders.get(i);
 				subtree.setAabbFromQuantizeNode(quantizedContiguousNodes, subtree.rootNodeIndex);
 			}
 
@@ -766,7 +767,7 @@ public class OptimizedBvh implements Serializable {
 
 			walkIterations++;
 
-			rootNode = contiguousNodes.getQuick(rootNode_index);
+			rootNode = contiguousNodes.get(rootNode_index);
 
 			aabbOverlap = AabbUtil2.testAabbAgainstAabb2(aabbMin, aabbMax, rootNode.aabbMinOrg, rootNode.aabbMaxOrg);
 			isLeafNode = (rootNode.escapeIndex == -1);
@@ -783,7 +784,7 @@ public class OptimizedBvh implements Serializable {
 				rootNode_index++;
 				curIndex++;
 			} else {
-				escapeIndex = /* rootNode */ contiguousNodes.getQuick(rootNode_index).escapeIndex;
+				escapeIndex = /* rootNode */ contiguousNodes.get(rootNode_index).escapeIndex;
 				rootNode_index += escapeIndex;
 				curIndex += escapeIndex;
 			}

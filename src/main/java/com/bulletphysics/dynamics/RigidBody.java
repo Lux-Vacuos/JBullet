@@ -23,6 +23,8 @@
 
 package com.bulletphysics.dynamics;
 
+import java.util.List;
+
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
@@ -39,7 +41,7 @@ import com.bulletphysics.linearmath.MiscUtil;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.TransformUtil;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.util.GlueList;
 
 /**
  * RigidBody is the main class for rigid body objects. It is derived from
@@ -103,7 +105,7 @@ public class RigidBody extends CollisionObject {
 	private MotionState optionalMotionState;
 
 	// keep track of typed constraints referencing this rigid body
-	private final ObjectArrayList<TypedConstraint> constraintRefs = new ObjectArrayList<TypedConstraint>();
+	private final List<TypedConstraint> constraintRefs = new GlueList<>();
 
 	// for experimental overriding of friction/contact solver func
 	public int contactSolverType;
@@ -607,7 +609,7 @@ public class RigidBody extends CollisionObject {
 		}
 
 		for (int i = 0; i < constraintRefs.size(); ++i) {
-			TypedConstraint c = constraintRefs.getQuick(i);
+			TypedConstraint c = constraintRefs.get(i);
 			if (c.getRigidBodyA() == otherRb || c.getRigidBodyB() == otherRb) {
 				return false;
 			}
@@ -631,7 +633,7 @@ public class RigidBody extends CollisionObject {
 	}
 
 	public TypedConstraint getConstraintRef(int index) {
-		return constraintRefs.getQuick(index);
+		return constraintRefs.get(index);
 	}
 
 	public int getNumConstraintRefs() {

@@ -23,6 +23,8 @@
 
 package com.bulletphysics.dynamics.vehicle;
 
+import java.util.List;
+
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
@@ -37,7 +39,7 @@ import com.bulletphysics.linearmath.QuaternionUtil;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.util.ArrayPool;
 import com.bulletphysics.util.FloatArrayList;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.util.GlueList;
 
 /**
  * Raycast vehicle, very special constraint that turn a rigidbody into a
@@ -52,8 +54,8 @@ public class RaycastVehicle extends TypedConstraint {
 	private static RigidBody s_fixedObject = new RigidBody(0, null, null);
 	private static final float sideFrictionStiffness2 = 1.0f;
 
-	protected ObjectArrayList<Vector3f> forwardWS = new ObjectArrayList<Vector3f>();
-	protected ObjectArrayList<Vector3f> axle = new ObjectArrayList<Vector3f>();
+	protected List<Vector3f> forwardWS = new GlueList<>();
+	protected List<Vector3f> axle = new GlueList<>();
 	protected FloatArrayList forwardImpulse = new FloatArrayList();
 	protected FloatArrayList sideImpulse = new FloatArrayList();
 
@@ -70,7 +72,7 @@ public class RaycastVehicle extends TypedConstraint {
 	private int indexUpAxis = 2;
 	private int indexForwardAxis = 1;
 
-	public ObjectArrayList<WheelInfo> wheelInfo = new ObjectArrayList<WheelInfo>();
+	public List<WheelInfo> wheelInfo = new GlueList<>();
 
 	// constructor to create a car from an existing rigidbody
 	public RaycastVehicle(VehicleTuning tuning, RigidBody chassis, VehicleRaycaster raycaster) {
@@ -107,7 +109,7 @@ public class RaycastVehicle extends TypedConstraint {
 
 		wheelInfo.add(new WheelInfo(ci));
 
-		WheelInfo wheel = wheelInfo.getQuick(getNumWheels() - 1);
+		WheelInfo wheel = wheelInfo.get(getNumWheels() - 1);
 
 		updateWheelTransformsWS(wheel, false);
 		updateWheelTransform(getNumWheels() - 1, false);
@@ -116,7 +118,7 @@ public class RaycastVehicle extends TypedConstraint {
 
 	public Transform getWheelTransformWS(int wheelIndex, Transform out) {
 		assert (wheelIndex < getNumWheels());
-		WheelInfo wheel = wheelInfo.getQuick(wheelIndex);
+		WheelInfo wheel = wheelInfo.get(wheelIndex);
 		out.set(wheel.worldTransform);
 		return out;
 	}
@@ -126,7 +128,7 @@ public class RaycastVehicle extends TypedConstraint {
 	}
 
 	public void updateWheelTransform(int wheelIndex, boolean interpolatedTransform) {
-		WheelInfo wheel = wheelInfo.getQuick(wheelIndex);
+		WheelInfo wheel = wheelInfo.get(wheelIndex);
 		updateWheelTransformsWS(wheel, interpolatedTransform);
 		Vector3f up = new Vector3f();
 		up.negate(wheel.raycastInfo.wheelDirectionWS);
@@ -164,9 +166,7 @@ public class RaycastVehicle extends TypedConstraint {
 	}
 
 	public void resetSuspension() {
-		int i;
-		for (i = 0; i < wheelInfo.size(); i++) {
-			WheelInfo wheel = wheelInfo.getQuick(i);
+		for (WheelInfo wheel : wheelInfo) {
 			wheel.raycastInfo.suspensionLength = wheel.getSuspensionRestLength();
 			wheel.suspensionRelativeVelocity = 0f;
 
@@ -308,17 +308,13 @@ public class RaycastVehicle extends TypedConstraint {
 		// simulate suspension
 		//
 
-		int i = 0;
-		for (i = 0; i < wheelInfo.size(); i++) {
-			float depth;
-			depth = rayCast(wheelInfo.getQuick(i));
+		for (WheelInfo wheel : wheelInfo) {
+			rayCast(wheel);
 		}
 
 		updateSuspension(step);
 
-		for (i = 0; i < wheelInfo.size(); i++) {
-			// apply suspension force
-			WheelInfo wheel = wheelInfo.getQuick(i);
+		for (WheelInfo wheel : wheelInfo) {
 
 			float suspensionForce = wheel.wheelsSuspensionForce;
 
@@ -336,8 +332,7 @@ public class RaycastVehicle extends TypedConstraint {
 
 		updateFriction(step);
 
-		for (i = 0; i < wheelInfo.size(); i++) {
-			WheelInfo wheel = wheelInfo.getQuick(i);
+		for (WheelInfo wheel : wheelInfo) {
 			Vector3f relpos = new Vector3f();
 			relpos.sub(wheel.raycastInfo.hardPointWS, getRigidBody().getCenterOfMassPosition(tmp));
 			Vector3f vel = getRigidBody().getVelocityInLocalPoint(relpos, new Vector3f());
@@ -387,7 +382,7 @@ public class RaycastVehicle extends TypedConstraint {
 	public WheelInfo getWheelInfo(int index) {
 		assert ((index >= 0) && (index < getNumWheels()));
 
-		return wheelInfo.getQuick(index);
+		return wheelInfo.get(index);
 	}
 
 	public void setBrake(float brake, int wheelIndex) {
@@ -399,7 +394,7 @@ public class RaycastVehicle extends TypedConstraint {
 		float chassisMass = 1f / chassisBody.getInvMass();
 
 		for (int w_it = 0; w_it < getNumWheels(); w_it++) {
-			WheelInfo wheel_info = wheelInfo.getQuick(w_it);
+			WheelInfo wheel_info = wheelInfo.get(w_it);
 
 			if (wheel_info.raycastInfo.isInContact) {
 				float force;
@@ -485,7 +480,7 @@ public class RaycastVehicle extends TypedConstraint {
 
 		// collapse all those loops into one!
 		for (int i = 0; i < getNumWheels(); i++) {
-			WheelInfo wheel_info = wheelInfo.getQuick(i);
+			WheelInfo wheel_info = wheelInfo.get(i);
 			RigidBody groundObject = (RigidBody) wheel_info.raycastInfo.groundObject;
 			if (groundObject != null) {
 				numWheelsOnGround++;
@@ -498,7 +493,7 @@ public class RaycastVehicle extends TypedConstraint {
 			Transform wheelTrans = new Transform();
 			for (int i = 0; i < getNumWheels(); i++) {
 
-				WheelInfo wheel_info = wheelInfo.getQuick(i);
+				WheelInfo wheel_info = wheelInfo.get(i);
 
 				RigidBody groundObject = (RigidBody) wheel_info.raycastInfo.groundObject;
 
@@ -506,22 +501,21 @@ public class RaycastVehicle extends TypedConstraint {
 					getWheelTransformWS(i, wheelTrans);
 
 					Matrix3f wheelBasis0 = new Matrix3f(wheelTrans.basis);
-					axle.getQuick(i).set(wheelBasis0.getElement(0, indexRightAxis),
+					axle.get(i).set(wheelBasis0.getElement(0, indexRightAxis),
 							wheelBasis0.getElement(1, indexRightAxis), wheelBasis0.getElement(2, indexRightAxis));
 
 					Vector3f surfNormalWS = wheel_info.raycastInfo.contactNormalWS;
-					float proj = axle.getQuick(i).dot(surfNormalWS);
+					float proj = axle.get(i).dot(surfNormalWS);
 					tmp.scale(proj, surfNormalWS);
-					axle.getQuick(i).sub(tmp);
-					axle.getQuick(i).normalize();
+					axle.get(i).sub(tmp);
+					axle.get(i).normalize();
 
-					forwardWS.getQuick(i).cross(surfNormalWS, axle.getQuick(i));
-					forwardWS.getQuick(i).normalize();
+					forwardWS.get(i).cross(surfNormalWS, axle.get(i));
+					forwardWS.get(i).normalize();
 
 					float[] floatPtr = floatArrays.getFixed(1);
 					ContactConstraint.resolveSingleBilateral(chassisBody, wheel_info.raycastInfo.contactPointWS,
-							groundObject, wheel_info.raycastInfo.contactPointWS, 0f, axle.getQuick(i), floatPtr,
-							timeStep);
+							groundObject, wheel_info.raycastInfo.contactPointWS, 0f, axle.get(i), floatPtr, timeStep);
 					sideImpulse.set(i, floatPtr[0]);
 					floatArrays.release(floatPtr);
 
@@ -536,7 +530,7 @@ public class RaycastVehicle extends TypedConstraint {
 		boolean sliding = false;
 		{
 			for (int wheel = 0; wheel < getNumWheels(); wheel++) {
-				WheelInfo wheel_info = wheelInfo.getQuick(wheel);
+				WheelInfo wheel_info = wheelInfo.get(wheel);
 				RigidBody groundObject = (RigidBody) wheel_info.raycastInfo.groundObject;
 
 				float rollingFriction = 0f;
@@ -548,7 +542,7 @@ public class RaycastVehicle extends TypedConstraint {
 						float defaultRollingFrictionImpulse = 0f;
 						float maxImpulse = wheel_info.brake != 0f ? wheel_info.brake : defaultRollingFrictionImpulse;
 						WheelContactPoint contactPt = new WheelContactPoint(chassisBody, groundObject,
-								wheel_info.raycastInfo.contactPointWS, forwardWS.getQuick(wheel), maxImpulse);
+								wheel_info.raycastInfo.contactPointWS, forwardWS.get(wheel), maxImpulse);
 						rollingFriction = calcRollingFriction(contactPt);
 					}
 				}
@@ -557,10 +551,10 @@ public class RaycastVehicle extends TypedConstraint {
 				// friction (no throttle/break)
 
 				forwardImpulse.set(wheel, 0f);
-				wheelInfo.getQuick(wheel).skidInfo = 1f;
+				wheelInfo.get(wheel).skidInfo = 1f;
 
 				if (groundObject != null) {
-					wheelInfo.getQuick(wheel).skidInfo = 1f;
+					wheelInfo.get(wheel).skidInfo = 1f;
 
 					float maximp = wheel_info.wheelsSuspensionForce * timeStep * wheel_info.frictionSlip;
 					float maximpSide = maximp;
@@ -579,7 +573,7 @@ public class RaycastVehicle extends TypedConstraint {
 
 						float factor = maximp / (float) Math.sqrt(impulseSquared);
 
-						wheelInfo.getQuick(wheel).skidInfo *= factor;
+						wheelInfo.get(wheel).skidInfo *= factor;
 					}
 				}
 
@@ -589,9 +583,9 @@ public class RaycastVehicle extends TypedConstraint {
 		if (sliding) {
 			for (int wheel = 0; wheel < getNumWheels(); wheel++) {
 				if (sideImpulse.get(wheel) != 0f) {
-					if (wheelInfo.getQuick(wheel).skidInfo < 1f) {
-						forwardImpulse.set(wheel, forwardImpulse.get(wheel) * wheelInfo.getQuick(wheel).skidInfo);
-						sideImpulse.set(wheel, sideImpulse.get(wheel) * wheelInfo.getQuick(wheel).skidInfo);
+					if (wheelInfo.get(wheel).skidInfo < 1f) {
+						forwardImpulse.set(wheel, forwardImpulse.get(wheel) * wheelInfo.get(wheel).skidInfo);
+						sideImpulse.set(wheel, sideImpulse.get(wheel) * wheelInfo.get(wheel).skidInfo);
 					}
 				}
 			}
@@ -600,23 +594,23 @@ public class RaycastVehicle extends TypedConstraint {
 		// apply the impulses
 		{
 			for (int wheel = 0; wheel < getNumWheels(); wheel++) {
-				WheelInfo wheel_info = wheelInfo.getQuick(wheel);
+				WheelInfo wheel_info = wheelInfo.get(wheel);
 
 				Vector3f rel_pos = new Vector3f();
 				rel_pos.sub(wheel_info.raycastInfo.contactPointWS, chassisBody.getCenterOfMassPosition(tmp));
 
 				if (forwardImpulse.get(wheel) != 0f) {
-					tmp.scale(forwardImpulse.get(wheel), forwardWS.getQuick(wheel));
+					tmp.scale(forwardImpulse.get(wheel), forwardWS.get(wheel));
 					chassisBody.applyImpulse(tmp, rel_pos);
 				}
 				if (sideImpulse.get(wheel) != 0f) {
-					RigidBody groundObject = (RigidBody) wheelInfo.getQuick(wheel).raycastInfo.groundObject;
+					RigidBody groundObject = (RigidBody) wheelInfo.get(wheel).raycastInfo.groundObject;
 
 					Vector3f rel_pos2 = new Vector3f();
 					rel_pos2.sub(wheel_info.raycastInfo.contactPointWS, groundObject.getCenterOfMassPosition(tmp));
 
 					Vector3f sideImp = new Vector3f();
-					sideImp.scale(sideImpulse.get(wheel), axle.getQuick(wheel));
+					sideImp.scale(sideImpulse.get(wheel), axle.get(wheel));
 
 					rel_pos.z *= wheel_info.rollInfluence;
 					chassisBody.applyImpulse(sideImp, rel_pos);

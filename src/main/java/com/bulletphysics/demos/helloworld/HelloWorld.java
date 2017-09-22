@@ -24,6 +24,10 @@
 
 package com.bulletphysics.demos.helloworld;
 
+import java.util.List;
+
+import javax.vecmath.Vector3f;
+
 import com.bulletphysics.collision.broadphase.AxisSweep3;
 import com.bulletphysics.collision.dispatch.CollisionConfiguration;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
@@ -38,8 +42,7 @@ import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.Transform;
-import com.bulletphysics.util.ObjectArrayList;
-import javax.vecmath.Vector3f;
+import com.bulletphysics.util.GlueList;
 
 /**
  * This is a Hello World program for running a basic Bullet physics simulation.
@@ -47,8 +50,7 @@ import javax.vecmath.Vector3f;
  *
  * @author cdorman
  */
-public class HelloWorld
-{
+public class HelloWorld {
 	public static void main(String[] args) {
 		// collision configuration contains default setup for memory, collision
 		// setup. Advanced users can create their own configuration.
@@ -56,8 +58,7 @@ public class HelloWorld
 
 		// use the default collision dispatcher. For parallel processing you
 		// can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-		CollisionDispatcher dispatcher = new CollisionDispatcher(
-				collisionConfiguration);
+		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
 
 		// the maximum size of the collision world. Make sure objects stay
 		// within these boundaries
@@ -66,17 +67,15 @@ public class HelloWorld
 		Vector3f worldAabbMin = new Vector3f(-10000, -10000, -10000);
 		Vector3f worldAabbMax = new Vector3f(10000, 10000, 10000);
 		int maxProxies = 1024;
-		AxisSweep3 overlappingPairCache =
-				new AxisSweep3(worldAabbMin, worldAabbMax, maxProxies);
-		//BroadphaseInterface overlappingPairCache = new SimpleBroadphase(
-		//		maxProxies);
+		AxisSweep3 overlappingPairCache = new AxisSweep3(worldAabbMin, worldAabbMax, maxProxies);
+		// BroadphaseInterface overlappingPairCache = new SimpleBroadphase(
+		// maxProxies);
 
 		// the default constraint solver. For parallel processing you can use a
 		// different solver (see Extras/BulletMultiThreaded)
 		SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
 
-		DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(
-				dispatcher, overlappingPairCache, solver,
+		DiscreteDynamicsWorld dynamicsWorld = new DiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver,
 				collisionConfiguration);
 
 		dynamicsWorld.setGravity(new Vector3f(0, -10, 0));
@@ -87,7 +86,7 @@ public class HelloWorld
 		// keep track of the shapes, we release memory at exit.
 		// make sure to re-use collision shapes among rigid bodies whenever
 		// possible!
-		ObjectArrayList<CollisionShape> collisionShapes = new ObjectArrayList<CollisionShape>();
+		List<CollisionShape> collisionShapes = new GlueList<CollisionShape>();
 
 		collisionShapes.add(groundShape);
 
@@ -110,8 +109,8 @@ public class HelloWorld
 			// using motionstate is recommended, it provides interpolation
 			// capabilities, and only synchronizes 'active' objects
 			DefaultMotionState myMotionState = new DefaultMotionState(groundTransform);
-			RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-					mass, myMotionState, groundShape, localInertia);
+			RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, groundShape,
+					localInertia);
 			RigidBody body = new RigidBody(rbInfo);
 
 			// add the body to the dynamics world
@@ -148,27 +147,25 @@ public class HelloWorld
 			// 'active' objects
 			DefaultMotionState myMotionState = new DefaultMotionState(startTransform);
 
-			RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(
-					mass, myMotionState, colShape, localInertia);
+			RigidBodyConstructionInfo rbInfo = new RigidBodyConstructionInfo(mass, myMotionState, colShape,
+					localInertia);
 			RigidBody body = new RigidBody(rbInfo);
 
 			dynamicsWorld.addRigidBody(body);
 		}
 
 		// Do some simulation
-		for (int i=0; i<100; i++) {
+		for (int i = 0; i < 100; i++) {
 			dynamicsWorld.stepSimulation(1.f / 60.f, 10);
 
 			// print positions of all objects
-			for (int j=dynamicsWorld.getNumCollisionObjects()-1; j>=0; j--)
-			{
+			for (int j = dynamicsWorld.getNumCollisionObjects() - 1; j >= 0; j--) {
 				CollisionObject obj = dynamicsWorld.getCollisionObjectArray().get(j);
 				RigidBody body = RigidBody.upcast(obj);
 				if (body != null && body.getMotionState() != null) {
 					Transform trans = new Transform();
 					body.getMotionState().getWorldTransform(trans);
-					System.out.printf("world pos = %f,%f,%f\n", trans.origin.x,
-							trans.origin.y, trans.origin.z);
+					System.out.printf("world pos = %f,%f,%f\n", trans.origin.x, trans.origin.y, trans.origin.z);
 				}
 			}
 		}

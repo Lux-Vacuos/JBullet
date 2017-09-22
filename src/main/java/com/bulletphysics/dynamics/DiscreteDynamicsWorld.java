@@ -58,7 +58,6 @@ import com.bulletphysics.linearmath.ScalarUtil;
 import com.bulletphysics.linearmath.Transform;
 import com.bulletphysics.linearmath.TransformUtil;
 import com.bulletphysics.util.GlueList;
-import com.bulletphysics.util.ObjectArrayList;
 
 /**
  * DiscreteDynamicsWorld provides discrete rigid body simulation.
@@ -524,15 +523,14 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 	private static class InplaceSolverIslandCallback extends SimulationIslandManager.IslandCallback {
 		public ContactSolverInfo solverInfo;
 		public ConstraintSolver solver;
-		public ObjectArrayList<TypedConstraint> sortedConstraints;
+		public List<TypedConstraint> sortedConstraints;
 		public int numConstraints;
 		public IDebugDraw debugDrawer;
 		// public StackAlloc* m_stackAlloc;
 		public Dispatcher dispatcher;
 
-		public void init(ContactSolverInfo solverInfo, ConstraintSolver solver,
-				ObjectArrayList<TypedConstraint> sortedConstraints, int numConstraints, IDebugDraw debugDrawer,
-				Dispatcher dispatcher) {
+		public void init(ContactSolverInfo solverInfo, ConstraintSolver solver, List<TypedConstraint> sortedConstraints,
+				int numConstraints, IDebugDraw debugDrawer, Dispatcher dispatcher) {
 			this.solverInfo = solverInfo;
 			this.solver = solver;
 			this.sortedConstraints = sortedConstraints;
@@ -541,8 +539,8 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 			this.dispatcher = dispatcher;
 		}
 
-		public void processIsland(ObjectArrayList<CollisionObject> bodies, int numBodies,
-				ObjectArrayList<PersistentManifold> manifolds, int manifolds_offset, int numManifolds, int islandId) {
+		public void processIsland(List<CollisionObject> bodies, int numBodies, List<PersistentManifold> manifolds,
+				int manifolds_offset, int numManifolds, int islandId) {
 			if (islandId < 0) {
 				// we don't split islands, so all constraints/contact manifolds/bodies are
 				// passed into the solver regardless the island id
@@ -550,14 +548,14 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 						numConstraints, solverInfo, debugDrawer/* ,m_stackAlloc */, dispatcher);
 			} else {
 				// also add all non-contact constraints/joints for this island
-				// ObjectArrayList<TypedConstraint> startConstraint = null;
+				// List<TypedConstraint> startConstraint = null;
 				int startConstraint_idx = -1;
 				int numCurConstraints = 0;
 				int i;
 
 				// find the first constraint for this island
 				for (i = 0; i < numConstraints; i++) {
-					if (getConstraintIslandId(sortedConstraints.getQuick(i)) == islandId) {
+					if (getConstraintIslandId(sortedConstraints.get(i)) == islandId) {
 						// startConstraint = &m_sortedConstraints[i];
 						// startConstraint = sortedConstraints.subList(i, sortedConstraints.size());
 						startConstraint_idx = i;
@@ -566,7 +564,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 				}
 				// count the number of constraints in this island
 				for (; i < numConstraints; i++) {
-					if (getConstraintIslandId(sortedConstraints.getQuick(i)) == islandId) {
+					if (getConstraintIslandId(sortedConstraints.get(i)) == islandId) {
 						numCurConstraints++;
 					}
 				}
@@ -582,7 +580,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 		}
 	}
 
-	private ObjectArrayList<TypedConstraint> sortedConstraints = new ObjectArrayList<TypedConstraint>();
+	private List<TypedConstraint> sortedConstraints = new GlueList<>();
 	private InplaceSolverIslandCallback solverCallback = new InplaceSolverIslandCallback();
 
 	protected void solveConstraints(ContactSolverInfo solverInfo) {
@@ -594,7 +592,7 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 			// Collections.sort(sortedConstraints, sortConstraintOnIslandPredicate);
 			MiscUtil.quickSort(sortedConstraints, sortConstraintOnIslandPredicate);
 
-			ObjectArrayList<TypedConstraint> constraintsPtr = getNumConstraints() != 0 ? sortedConstraints : null;
+			List<TypedConstraint> constraintsPtr = getNumConstraints() != 0 ? sortedConstraints : null;
 
 			solverCallback.init(solverInfo, constraintSolver, constraintsPtr, sortedConstraints.size(),
 					debugDrawer/* ,m_stackAlloc */, dispatcher1);
@@ -1153,14 +1151,14 @@ public class DiscreteDynamicsWorld extends DynamicsWorld {
 			if (dispatcher.needsResponse(me, otherObj)) {
 				// don't do CCD when there are already contact points (touching
 				// contact/penetration)
-				ObjectArrayList<PersistentManifold> manifoldArray = new ObjectArrayList<PersistentManifold>();
+				List<PersistentManifold> manifoldArray = new GlueList<>();
 				BroadphasePair collisionPair = pairCache.findPair(me.getBroadphaseHandle(), proxy0);
 				if (collisionPair != null) {
 					if (collisionPair.algorithm != null) {
 						// manifoldArray.resize(0);
 						collisionPair.algorithm.getAllContactManifolds(manifoldArray);
 						for (int j = 0; j < manifoldArray.size(); j++) {
-							PersistentManifold manifold = manifoldArray.getQuick(j);
+							PersistentManifold manifold = manifoldArray.get(j);
 							if (manifold.getNumContacts() > 0) {
 								return false;
 							}
