@@ -220,7 +220,7 @@ public class CollisionDispatcher extends Dispatcher {
 		return hasResponse;
 	}
 
-	private static class CollisionPairCallback extends OverlapCallback {
+	private static class CollisionPairCallback implements OverlapCallback {
 		private DispatcherInfo dispatchInfo;
 		private CollisionDispatcher dispatcher;
 

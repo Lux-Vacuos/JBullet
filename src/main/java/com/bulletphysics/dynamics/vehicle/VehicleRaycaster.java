@@ -30,8 +30,8 @@ import javax.vecmath.Vector3f;
  * 
  * @author jezek2
  */
-public abstract class VehicleRaycaster {
+public interface VehicleRaycaster {
 
-	public abstract Object castRay(Vector3f from, Vector3f to, VehicleRaycasterResult result);
+	public Object castRay(Vector3f from, Vector3f to, VehicleRaycasterResult result);
 	
 }

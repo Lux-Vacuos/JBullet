@@ -35,7 +35,7 @@ import com.bulletphysics.util.ObjectPool;
  * 
  * @author jezek2
  */
-public class VoronoiSimplexSolver extends SimplexSolverInterface {
+public class VoronoiSimplexSolver implements SimplexSolverInterface {
 
 	// protected final BulletStack stack = BulletStack.get();
 	protected final ObjectPool<SubSimplexClosestResult> subsimplexResultsPool = ObjectPool

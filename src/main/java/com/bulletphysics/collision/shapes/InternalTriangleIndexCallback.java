@@ -31,8 +31,8 @@ import javax.vecmath.Vector3f;
  * @see StridingMeshInterface#internalProcessAllTriangles
  * @author jezek2
  */
-public abstract class InternalTriangleIndexCallback {
+public interface InternalTriangleIndexCallback {
 
-	public abstract void internalProcessTriangleIndex(Vector3f[] triangle, int partId, int triangleIndex);
+	public void internalProcessTriangleIndex(Vector3f[] triangle, int partId, int triangleIndex);
 	
 }

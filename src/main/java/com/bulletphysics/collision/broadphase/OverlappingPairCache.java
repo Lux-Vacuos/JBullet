@@ -31,24 +31,24 @@ import java.util.List;
  *
  * @author jezek2
  */
-public abstract class OverlappingPairCache extends OverlappingPairCallback {
+public interface OverlappingPairCache extends OverlappingPairCallback {
 
-	public abstract List<BroadphasePair> getOverlappingPairArray();
+	public List<BroadphasePair> getOverlappingPairArray();
 
-	public abstract void cleanOverlappingPair(BroadphasePair pair, Dispatcher dispatcher);
+	public void cleanOverlappingPair(BroadphasePair pair, Dispatcher dispatcher);
 
-	public abstract int getNumOverlappingPairs();
+	public int getNumOverlappingPairs();
 
-	public abstract void cleanProxyFromPairs(BroadphaseProxy proxy, Dispatcher dispatcher);
+	public void cleanProxyFromPairs(BroadphaseProxy proxy, Dispatcher dispatcher);
 
-	public abstract void setOverlapFilterCallback(OverlapFilterCallback overlapFilterCallback);
+	public void setOverlapFilterCallback(OverlapFilterCallback overlapFilterCallback);
 
-	public abstract void processAllOverlappingPairs(OverlapCallback callback, Dispatcher dispatcher);
+	public void processAllOverlappingPairs(OverlapCallback callback, Dispatcher dispatcher);
 
-	public abstract BroadphasePair findPair(BroadphaseProxy proxy0, BroadphaseProxy proxy1);
+	public BroadphasePair findPair(BroadphaseProxy proxy0, BroadphaseProxy proxy1);
 
-	public abstract boolean hasDeferredRemoval();
+	public boolean hasDeferredRemoval();
 
-	public abstract void setInternalGhostPairCallback(OverlappingPairCallback ghostPairCallback);
+	public void setInternalGhostPairCallback(OverlappingPairCallback ghostPairCallback);
 
 }

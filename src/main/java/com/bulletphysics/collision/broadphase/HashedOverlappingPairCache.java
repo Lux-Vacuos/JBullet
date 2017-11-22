@@ -36,7 +36,7 @@ import com.bulletphysics.util.ObjectPool;
  * 
  * @author jezek2
  */
-public class HashedOverlappingPairCache extends OverlappingPairCache {
+public class HashedOverlappingPairCache implements OverlappingPairCache {
 
 	private final ObjectPool<BroadphasePair> pairsPool = ObjectPool.get(BroadphasePair.class);
 
@@ -424,7 +424,7 @@ public class HashedOverlappingPairCache extends OverlappingPairCache {
 
 	////////////////////////////////////////////////////////////////////////////
 
-	private static class RemovePairCallback extends OverlapCallback {
+	private static class RemovePairCallback implements OverlapCallback {
 		private BroadphaseProxy obsoleteProxy;
 
 		public RemovePairCallback(BroadphaseProxy obsoleteProxy) {
@@ -436,7 +436,7 @@ public class HashedOverlappingPairCache extends OverlappingPairCache {
 		}
 	}
 
-	private static class CleanPairCallback extends OverlapCallback {
+	private static class CleanPairCallback implements OverlapCallback {
 		private BroadphaseProxy cleanProxy;
 		private OverlappingPairCache pairCache;
 		private Dispatcher dispatcher;

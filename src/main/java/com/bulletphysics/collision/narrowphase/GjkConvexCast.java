@@ -36,7 +36,7 @@ import com.bulletphysics.util.ObjectPool;
  * 
  * @author jezek2
  */
-public class GjkConvexCast extends ConvexCast {
+public class GjkConvexCast implements ConvexCast {
 
 	// protected final BulletStack stack = BulletStack.get();
 	protected final ObjectPool<ClosestPointInput> pointInputsPool = ObjectPool.get(ClosestPointInput.class);

@@ -26,35 +26,35 @@ package com.bulletphysics.collision.narrowphase;
 import javax.vecmath.Vector3f;
 
 /**
- * SimplexSolverInterface can incrementally calculate distance between origin and
- * up to 4 vertices. Used by GJK or Linear Casting. Can be implemented by the
- * Johnson-algorithm or alternative approaches based on voronoi regions or barycentric
- * coordinates.
+ * SimplexSolverInterface can incrementally calculate distance between origin
+ * and up to 4 vertices. Used by GJK or Linear Casting. Can be implemented by
+ * the Johnson-algorithm or alternative approaches based on voronoi regions or
+ * barycentric coordinates.
  * 
  * @author jezek2
  */
-public abstract class SimplexSolverInterface {
+public interface SimplexSolverInterface {
 
-	public abstract void reset();
+	public void reset();
 
-	public abstract void addVertex(Vector3f w, Vector3f p, Vector3f q);
-	
-	public abstract boolean closest(Vector3f v);
+	public void addVertex(Vector3f w, Vector3f p, Vector3f q);
 
-	public abstract float maxVertex();
+	public boolean closest(Vector3f v);
 
-	public abstract boolean fullSimplex();
+	public float maxVertex();
 
-	public abstract int getSimplex(Vector3f[] pBuf, Vector3f[] qBuf, Vector3f[] yBuf);
+	public boolean fullSimplex();
 
-	public abstract boolean inSimplex(Vector3f w);
-	
-	public abstract void backup_closest(Vector3f v);
+	public int getSimplex(Vector3f[] pBuf, Vector3f[] qBuf, Vector3f[] yBuf);
 
-	public abstract boolean emptySimplex();
+	public boolean inSimplex(Vector3f w);
 
-	public abstract void compute_points(Vector3f p1, Vector3f p2);
+	public void backup_closest(Vector3f v);
 
-	public abstract int numVertices();
-	
+	public boolean emptySimplex();
+
+	public void compute_points(Vector3f p1, Vector3f p2);
+
+	public int numVertices();
+
 }

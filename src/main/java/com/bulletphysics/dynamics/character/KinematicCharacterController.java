@@ -53,7 +53,7 @@ import com.bulletphysics.util.GlueList;
  * 
  * @author tomrbryn
  */
-public class KinematicCharacterController extends ActionInterface {
+public class KinematicCharacterController implements ActionInterface {
 
 	private static Vector3f[] upAxisDirection = new Vector3f[] { new Vector3f(1.0f, 0.0f, 0.0f),
 			new Vector3f(0.0f, 1.0f, 0.0f), new Vector3f(0.0f, 0.0f, 1.0f), };

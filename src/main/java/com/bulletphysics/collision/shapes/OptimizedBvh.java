@@ -195,7 +195,7 @@ public class OptimizedBvh implements Serializable {
 		}
 	}
 
-	private static class NodeTriangleCallback extends InternalTriangleIndexCallback {
+	private static class NodeTriangleCallback implements InternalTriangleIndexCallback {
 		public List<OptimizedBvhNode> triangleNodes;
 
 		public NodeTriangleCallback(List<OptimizedBvhNode> triangleNodes) {
@@ -228,7 +228,7 @@ public class OptimizedBvh implements Serializable {
 		}
 	}
 
-	private static class QuantizedNodeTriangleCallback extends InternalTriangleIndexCallback {
+	private static class QuantizedNodeTriangleCallback implements InternalTriangleIndexCallback {
 		// protected final BulletStack stack = BulletStack.get();
 
 		public QuantizedBvhNodes triangleNodes;

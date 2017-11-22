@@ -33,7 +33,7 @@ import javax.vecmath.Vector3f;
  * 
  * @author jezek2
  */
-public class DefaultVehicleRaycaster extends VehicleRaycaster {
+public class DefaultVehicleRaycaster implements VehicleRaycaster {
 
 	protected DynamicsWorld dynamicsWorld;
 

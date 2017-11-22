@@ -39,7 +39,7 @@ import com.bulletphysics.linearmath.VectorUtil;
  * 
  * @author jezek2
  */
-public class SubsimplexConvexCast extends ConvexCast {
+public class SubsimplexConvexCast implements ConvexCast {
 
 	// protected final BulletStack stack = BulletStack.get();
 
