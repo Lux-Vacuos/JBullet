@@ -9,11 +9,10 @@ sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
-	maven { url "http://maven.geotoolkit.org/" }
 }
 
 dependencies {
-	compile 'java3d:vecmath:1.5.2'
+	compile 'javax.vecmath:vecmath:1.5.2'
 }
 
 sourceSets {
