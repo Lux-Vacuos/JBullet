@@ -2,7 +2,7 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'java'
-	id 'net.nemerosa.versioning' version '2.0.0'
+	id 'net.nemerosa.versioning' version '2.6.1'
 }
 
 sourceCompatibility = 1.8
