@@ -30,4 +30,4 @@ jar {
 	version = "2.72-" + versioning.info.full
 }
 
-task wrapper(type: Wrapper) { gradleVersion = '4.1' }
+task wrapper(type: Wrapper) { gradleVersion = '4.6' }
